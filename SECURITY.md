@@ -5,13 +5,19 @@ Testigo is meant to hold reports of human-rights harms, so security problems put
 
 ## Reporting a vulnerability
 
-Report anything that looks like a security problem to the maintainers privately, never in a
-public issue, pull request or chat channel. Include what you found, how to reproduce it, and what
-an attacker could do with it. Please don't test against any server you don't run yourself, and
-never submit real personal data to a demo.
+**Private contact not configured yet (D8, NFR-SEC-14).** The author has left this pending.
+There is currently no documented private reporting service or response-time commitment.
+Do not put vulnerability details, secrets or personal data in public issues, pull requests or chats.
+A public request to establish a private channel should contain no sensitive details.
 
-If you think a secret (an API key, a password, `SECRETS_MASTER_KEY`, a case-data key) has leaked,
-say so right away so it can be rotated, even if you aren't sure.
+Before public release, maintainers must supply and test a maintained private address or disclosure
+URL, name who can access reports, state realistic acknowledgment times and provide an alternative
+for complaints involving a maintainer. Never invent an address that appears operational.
+Once that channel exists, reports should include reproduction steps using synthetic data.
+Test only servers you operate or have permission to test.
+
+**Resumen:** aún no hay un contacto privado configurado. No publiques vulnerabilidades,
+credenciales ni datos personales. Este requisito sigue pendiente antes de publicar el proyecto.
 
 ## Rules this repository follows
 
@@ -38,5 +44,8 @@ The defaults in `docker-compose.yml` and `.env.example` are for one local machin
 - set strong values for `POSTGRES_PASSWORD` and `SECRETS_MASTER_KEY`, and back up the master key;
 - set `PLATFORM_ADMIN_EMAIL` to the operators' emails and create the operator's account first
   (it takes `SETUP_TOKEN`, generated and logged by the API when empty);
-- keep `LLM_ALLOW_PRIVATE_BASE_URLS=false` unless everyone who can sign in is trusted with the
-  server's internal network.
+- choose the model policy explicitly: `TESTIGO_LOCAL_MODELS_ONLY=true` enforces Mock or local
+  model endpoints (including compatible APIs); otherwise hosted providers can receive synthetic text with identifiers
+  missed by rules (`docs/llm-settings.md`). Real-data cloud use is not validated;
+- establish the private reporting contact above. A public interactive demo also needs tested
+  synthetic-only intake/discard and reset behavior; the current local demo does not delete automatically.

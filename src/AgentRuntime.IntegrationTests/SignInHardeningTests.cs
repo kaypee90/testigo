@@ -11,26 +11,23 @@ namespace AgentRuntime.IntegrationTests;
 /// many addresses), and the ACP WebSocket, which CORS doesn't cover, answers the dashboard's pages
 /// only when the caller is a browser session.
 /// </summary>
-public sealed class SignInHardeningTests(ITestOutputHelper output)
+public sealed class SignInHardeningTests
 {
     private const string Password = "a-long-enough-password";
 
-    private async Task<ApiTestHost?> StartAsync()
+    private static async Task<ApiTestHost> StartAsync()
     {
         var host = new ApiTestHost();
         host.Settings["Auth:SignInAttemptsPerMinute"] = "1000";
         host.Settings["Auth:WrongPasswordsPerAccount"] = "3";
         await host.InitializeAsync();
-        if (host.Unavailable is null) return host;
-        output.WriteLine("SKIPPED: " + host.Unavailable);
-        await host.DisposeAsync();
-        return null;
+        return host;
     }
 
     [Fact]
     public async Task Wrong_passwords_pause_sign_in_to_that_account_only()
     {
-        if (await StartAsync() is not { } host) return;
+        var host = await StartAsync();
         try
         {
             using var client = host.Factory.CreateClient();

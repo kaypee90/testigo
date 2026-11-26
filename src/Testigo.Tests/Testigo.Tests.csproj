@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Testigo\Testigo.csproj" />
     <ProjectReference Include="..\Testigo.Infrastructure\Testigo.Infrastructure.csproj" />
     <ProjectReference Include="..\Testigo.Reporter\Testigo.Reporter.csproj" />
+    <ProjectReference Include="..\Testigo.Evals\Testigo.Evals.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,7 +12,7 @@ namespace AgentRuntime.IntegrationTests;
 /// <summary>The configured local admin (Auth:LocalAdmin) exists after startup, signs in with a
 /// username rather than an email, owns the default organization, is an operator, and isn't
 /// recreated or reset on a later start.</summary>
-public sealed class LocalAdminTests(LocalAdminTests.Fixture fixture, ITestOutputHelper output) : IClassFixture<LocalAdminTests.Fixture>
+public sealed class LocalAdminTests(LocalAdminTests.Fixture fixture) : IClassFixture<LocalAdminTests.Fixture>
 {
     public sealed class Fixture : IAsyncLifetime
     {
@@ -30,17 +30,10 @@ public sealed class LocalAdminTests(LocalAdminTests.Fixture fixture, ITestOutput
 
     private ApiTestHost Host => fixture.Host;
 
-    private bool Skip()
-    {
-        if (Host.Unavailable is null) return false;
-        output.WriteLine("SKIPPED: " + Host.Unavailable);
-        return true;
-    }
 
     [Fact]
     public async Task The_local_admin_signs_in_with_a_username_and_owns_the_default_organization()
     {
-        if (Skip()) return;
         using var client = Host.Factory.CreateClient();
 
         var wrong = await client.PostAsJsonAsync("/api/auth/login", new { email = "admin", password = "nope" });
@@ -59,7 +52,6 @@ public sealed class LocalAdminTests(LocalAdminTests.Fixture fixture, ITestOutput
     [Fact]
     public async Task Seeding_again_keeps_the_existing_account()
     {
-        if (Skip()) return;
         var identity = Host.Factory.Services.GetRequiredService<IdentityService>();
         var before = await identity.SignInAsync("admin", "admin", CancellationToken.None);
         Assert.True(before.Success, before.Error);

@@ -34,7 +34,7 @@ services:
     environment:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-testigo};Username=${POSTGRES_USER:-testigo};Password=${POSTGRES_PASSWORD:-testigo_dev_password}"
       # Mock is deterministic and needs no key. Ollama runs a local model; for hosted providers see
-      # docs/llm-settings.md (redacted report text then leaves the server: docs/data-protection.md).
+      # docs/llm-settings.md (rules can miss identifiers in outgoing text; synthetic data only).
       Llm__Provider: ${LLM_PROVIDER:-Mock}
       Llm__Model: ${LLM_MODEL:-mock}
       Llm__ApiKey: ${LLM_API_KEY:-}
@@ -44,6 +44,7 @@ services:
       Llm__ContextLength: ${LLM_CONTEXT_LENGTH:-16384}
       Llm__TimeoutSeconds: ${LLM_TIMEOUT_SECONDS:-300}
       Llm__DisableThinking: ${LLM_DISABLE_THINKING:-true}
+      Testigo__LocalModelsOnly: ${TESTIGO_LOCAL_MODELS_ONLY:-false}
       Dashboard__BaseUrl: ${STAFF_BASE_URL:-http://localhost:3101}
       # This key encrypts staff two-factor secrets: set SECRETS_MASTER_KEY (openssl rand -base64 32)
       # outside a demo; otherwise one is generated into the api-keys volume on first start.
@@ -72,7 +73,7 @@ services:
       Testigo__Keys__GenerateIfMissing: "true"
       Testigo__Intake__SharedKeyFile: /app/intake/intake.key
       Testigo__Intake__GenerateSharedKeyIfMissing: "true"
-      # Two-factor sign-in for staff (NFR-SEC-8). The admin turns it on under Settings first.
+      # Two-factor sign-in for staff (NFR-SEC-8). The admin turns it on under Ajustes first.
       Testigo__Staff__RequireTwoFactor: ${TESTIGO_REQUIRE_2FA:-true}
       # Synthetic demo reports, and the Analyst and Reviewer roles for the local admin.
       Testigo__Demo__Seed: ${TESTIGO_DEMO_SEED:-true}

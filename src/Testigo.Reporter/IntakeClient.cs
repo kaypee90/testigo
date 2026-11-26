@@ -14,7 +14,7 @@ public sealed record ContactDto(string Label, string? Phone, string? Url);
 public sealed record CountryContactsDto(List<ContactDto> Emergency, List<ContactDto> Support, string ResponseTime);
 
 public sealed record FormDto(string Version, string NoticeVersion, string Language, List<string>? Languages, List<FormFieldDto> Fields, List<ConsentDto> Consents, List<FormOptionDto> ContactMethods,
-    int PassphraseMinLength, Dictionary<string, CountryContactsDto> Contacts, string AiMode)
+    int PassphraseMinLength, Dictionary<string, CountryContactsDto> Contacts, string AiMode, string? AiProvider = null, string? AiEndpoint = null)
 {
     public CountryContactsDto ContactsFor(string? country) =>
         country is not null && Contacts.TryGetValue(country, out var c) ? c : Contacts.GetValueOrDefault("CL") ?? new CountryContactsDto([], [], string.Empty);

@@ -157,6 +157,19 @@ public sealed class ReporterAppTests
         Assert.Contains(new Texts("es")["intro.ai.mock"], html);
     }
 
+    /// <summary>FR-INT-2, NFR-AI-2: a cloud configuration never inherits a local-processing promise.</summary>
+    [Theory]
+    [InlineData("/", "es")]
+    [InlineData("/en", "en")]
+    public async Task Cloud_notice_identifies_the_provider_and_endpoint(string path, string language)
+    {
+        using var app = new ReporterApp(api => api.AiMode = "cloud");
+        var html = WebUtility.HtmlDecode(await app.Client.GetStringAsync(path));
+        Assert.Contains(new Texts(language)["intro.ai.cloud"].Replace("{provider}", "OpenAI · models.example"), html);
+        Assert.DoesNotContain(new Texts(language)["intro.ai.local"], html);
+        Assert.DoesNotContain("{provider}", html);
+    }
+
     /// <summary>NFR-SEC-2: the logo comes from the reporter's own origin and refers to nothing else
     /// (its only URL is the SVG namespace, which browsers never fetch).</summary>
     [Fact]
@@ -284,6 +297,13 @@ public sealed class ReporterAppTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("Elige un país.", html);
         Assert.Contains(Story, html);
+        // NFR-UX-1: the invalid field points to the error a screen reader must announce, and a field
+        // with nothing to point at gets no empty aria-describedby.
+        Assert.DoesNotContain("aria-describedby=\"\"", html);
+        Assert.Contains("id=\"f-country-error\"", html);
+        var select = Regex.Match(html, @"<select\b[^>]*id=""f-country""[^>]*>").Value;
+        Assert.Contains("aria-describedby=\"f-country-error\"", select);
+        Assert.Contains("aria-invalid=\"true\"", select);
     }
 
     [Fact]
@@ -412,6 +432,7 @@ public sealed class ReporterAppTests
     {
         public const string Key = "clave-de-prueba-0123456789abcdefghij";
         public HttpStatusCode PostStatus { get; set; } = HttpStatusCode.OK;
+        public string AiMode { get; set; } = "mock";
         public ConcurrentQueue<SentRequest> PostsQueue { get; } = new();
         public List<SentRequest> Posts => [.. PostsQueue];
         public ConcurrentQueue<string> FormQueries { get; } = new();
@@ -442,10 +463,11 @@ public sealed class ReporterAppTests
             if (request.Method == HttpMethod.Get && request.RequestUri!.AbsolutePath == "/api/intake/form")
             {
                 FormQueries.Enqueue(request.RequestUri.Query);
+                var form = Form.Replace("\"ai_mode\":\"mock\"", $"\"ai_mode\":\"{AiMode}\",\"ai_provider\":\"OpenAI\",\"ai_endpoint\":\"models.example\"");
                 // The API answers with the form in the language asked for (FR-INT-8).
                 return Json(HttpStatusCode.OK, request.RequestUri.Query.Contains("lang=en", StringComparison.Ordinal)
-                    ? Form.Replace("\"language\":\"es\"", "\"language\":\"en\"").Replace("¿Qué pasó?", "What happened?").Replace("Acepto que se guarde mi reporte.", "I agree to my report being stored.")
-                    : Form);
+                    ? form.Replace("\"language\":\"es\"", "\"language\":\"en\"").Replace("¿Qué pasó?", "What happened?").Replace("Acepto que se guarde mi reporte.", "I agree to my report being stored.")
+                    : form);
             }
 
             if (request.Method == HttpMethod.Post && request.RequestUri!.AbsolutePath == "/api/intake/reports")

@@ -26,6 +26,9 @@ public static class TestigoServiceCollectionExtensions
     /// <summary>Testigo's case management (D1: a native module).</summary>
     public static IServiceCollection AddTestigo(this IServiceCollection services, IConfiguration configuration)
     {
+        // Fail before loading cases or starting workers; do not silently substitute a provider.
+        CaseModelPolicy.Validate(configuration["Llm:Provider"], configuration["Llm:BaseUrl"], configuration["Llm:Model"],
+            configuration.GetValue<bool>("Testigo:LocalModelsOnly"));
         services.Configure<TestigoOptions>(configuration.GetSection(TestigoOptions.Section));
         var connectionString = configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("ConnectionStrings:Postgres is required.");
         services.AddDbContextFactory<TestigoDbContext>(o => o.UseNpgsql(connectionString, x => x.MigrationsHistoryTable("__ef_migrations", TestigoDbContext.Schema)));
@@ -74,8 +77,8 @@ public static class TestigoServiceCollectionExtensions
     /// </summary>
     internal static string DefaultModelLabel(IConfiguration configuration)
     {
-        var provider = configuration["Llm:Provider"];
-        return string.IsNullOrWhiteSpace(provider) || provider.Equals("Mock", StringComparison.OrdinalIgnoreCase)
+        var provider = LlmOptions.CanonicalProvider(configuration["Llm:Provider"]);
+        return provider == "Mock"
             ? "Mock"
             : $"{provider}:{configuration["Llm:Model"] ?? "default"}";
     }

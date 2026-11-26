@@ -14,7 +14,7 @@ namespace AgentRuntime.IntegrationTests;
 /// through the real API: with open sign-up off, people request access, an operator approves them into
 /// a new organization, and they join from the invitation; operators create, suspend and reactivate
 /// organizations, and suspension really cuts off sessions, sign-in and API keys.</summary>
-public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITestOutputHelper output) : IClassFixture<PlatformAdminTests.Fixture>
+public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture) : IClassFixture<PlatformAdminTests.Fixture>
 {
     private const string Password = "correct-horse-battery-staple-1";
     private const string OperatorEmail = "ops@example.test";
@@ -36,7 +36,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
             Host.Settings["App:Version"] = StampedCommit;
             Host.Settings["App:BuiltAt"] = "2026-11-05T14:52:00Z";
             await Host.InitializeAsync();
-            if (Host.Unavailable is not null) return;
 
             // The first account is always allowed, and takes over the default organization.
             using var scope = Host.Factory.Services.CreateScope();
@@ -59,12 +58,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
     private ApiTestHost Host => fixture.Host;
     private HttpClient Operator => fixture.Operator;
 
-    private bool Skip()
-    {
-        if (Host.Unavailable is null) return false;
-        output.WriteLine("SKIPPED: " + Host.Unavailable);
-        return true;
-    }
 
     private static async Task<JsonElement> Json(HttpResponseMessage response)
     {
@@ -78,7 +71,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
     [Fact]
     public async Task The_overview_says_which_build_is_running()
     {
-        if (Skip()) return;
         var version = (await Json(await Operator.GetAsync("/api/admin/overview"))).GetProperty("version");
 
         Assert.Equal(StampedCommit, version.GetProperty("commit").GetString());
@@ -100,7 +92,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
     [Fact]
     public async Task Suspending_an_organization_cuts_off_its_sessions_and_sign_in_until_it_is_reactivated()
     {
-        if (Skip()) return;
         var ownerEmail = $"owner-{Guid.NewGuid():n}@beta.test";
         var created = await Json(await Operator.PostAsJsonAsync("/api/admin/organizations", new { name = "Beta", owner_email = ownerEmail }));
         var tenantId = created.GetProperty("tenant_id").GetString()!;
@@ -133,7 +124,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
     [Fact]
     public async Task Operators_can_not_leave_an_organization_without_an_owner()
     {
-        if (Skip()) return;
         using var scope = Host.Factory.Services.CreateScope();
         var admin = scope.ServiceProvider.GetRequiredService<PlatformAdminService>();
         var identity = scope.ServiceProvider.GetRequiredService<IdentityService>();
@@ -155,7 +145,6 @@ public sealed class PlatformAdminTests(PlatformAdminTests.Fixture fixture, ITest
     [Fact]
     public async Task An_operators_email_can_not_be_claimed_by_signing_up()
     {
-        if (Skip()) return;
         using var scope = Host.Factory.Services.CreateScope();
         var identity = scope.ServiceProvider.GetRequiredService<IdentityService>();
 

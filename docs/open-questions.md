@@ -1,8 +1,8 @@
 # Open questions
 
 These items are assumptions about what a deploying organization needs. No organization has reviewed this
-project; nothing here has been agreed with them. Each item is built so it can change without code:
-a data file or a setting. The "Where" column says which.
+project; nothing here has been agreed with them. Implemented assumptions use data files or
+settings where possible. Unbuilt features and proposed governance are identified separately.
 
 Status: **open** for all of them until reviewed with a deploying organization.
 
@@ -18,11 +18,16 @@ Status: **open** for all of them until reviewed with a deploying organization.
 | Q8 | Retention periods per data type (reports, contact details, redaction maps, audit) | FR-ADM-3 | Not built in Phase 0: nothing is deleted automatically | Phase 2 (`RetentionRule`) |
 | Q9 | Which organization receives public reports on a server with several | FR-REG-1 | The default organization | `Testigo:Intake:Organization` |
 | Q10 | Submissions allowed per client and per minute before the form refuses | NFR-SEC-3 | 5 per client per 10 minutes (reporter app); 120 intake requests per minute in total (API, 4 × `SubmissionsPerMinute`) | `Reporter:SubmissionsPerClient`, `Reporter:SubmissionWindowMinutes`, `Testigo:Intake:SubmissionsPerMinute` |
-| Q11 | Two-factor sign-in for staff in the demo | NFR-SEC-8 | Required (`TESTIGO_REQUIRE_2FA=true`); the demo admin enrols under Settings → Account first | `Testigo:Staff:RequireTwoFactor` |
+| Q11 | Two-factor sign-in for staff in the demo | NFR-SEC-8 | Required (`TESTIGO_REQUIRE_2FA=true`); the demo admin enrols under Ajustes → Cuenta first | `Testigo:Staff:RequireTwoFactor` |
 | Q12 | Mapping to the AI Incident Database, OECD AI Incidents Monitor and AIAAIC: confirm their current schemas before building the export | §4.2 | Not built | Phase 3, a mapping data file |
 | Q13 | Legal basis for each kind of processing under Chile's Law 19.628 and Law 21.719, and the 2021 neurorights reform | NFR-SEC-15 | A first draft for counsel in [`data-protection.md`](data-protection.md) | Documentation |
 | Q14 | Which second country or partner for the regional pilot | §12 Q4 | Not started | — |
 | Q15 | The English texts for reporters: a person must review them before real use (FR-INT-8), and the deploying organization decides whether English is offered at all | FR-INT-8 | A first draft, offered at `/en` beside Spanish; the §12 banner stays in Spanish with an English line under it | `src/Testigo.Reporter/Texts/en.json`, `translations.en` in the form file, English labels in the support-contacts file, `ValidationMessages.English`; `Reporter:Languages` to turn it off |
+| Q16 | Who participates in co-design, how are they recruited and compensated, and what access/language support is needed? | G6, NFR-UX-3 | Proposed only; no contact or sessions completed | `community-participation.md`; $3,000 draft participation/accessibility envelope |
+| Q17 | Who can pause a pilot, veto data collection/publication or resolve a disagreement? | G6, FR-INT-2, FR-PAT-5 | Proposed decision rights, not agreed | `community-participation.md` |
+| Q18 | Who operates, maintains and funds the deployment, and what happens if participation or funding stops? | NFR-OPS-1, §12 | Discuss in the first stage, not after deployment | `community-participation.md` |
+| Q19 | Which model providers and processing boundaries are acceptable? | NFR-AI-1, NFR-AI-2 | Mock by default; all supported providers configurable for synthetic tests; local-only enforcement is opt-in | `Testigo:LocalModelsOnly` (`TESTIGO_LOCAL_MODELS_ONLY`), `Llm`; `llm-settings.md` |
+| Q20 | Are the synthetic labels and plain-language taxonomy terms appropriate? Distinguish treatment consent from data-collection consent (for example eval r11). | §4, §10, NFR-UX-3 | Author labels, not expert-validated ground truth | `evals/testigo/make_reports.py`, `src/Testigo/Data/taxonomy-v1.json` |
 
 ## Questions that aren't VALIDATE items but need someone's answer
 
@@ -30,3 +35,5 @@ Status: **open** for all of them until reviewed with a deploying organization.
   submissions discarded; a 2–3 minute recording needs none of that. Not started.
 - **Publication.** The repository is published only after a secret scan of the code and its
   history (NFR-OSS-2).
+- **Private security/conduct contact (D8, NFR-SEC-14).** Pending by the author's choice; must be
+  configured and tested before public release. No operational reporting channel is claimed.

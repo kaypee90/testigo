@@ -2,8 +2,8 @@
 
 NFR-SEC-1 asks for this before the intake is built for real (Phase 1). This is the Phase 0 draft:
 it describes the prototype as built, the gaps, and what Phase 1 must close. It has **not** been
-reviewed by a deploying organization or a security auditor; both are planned, the
-external audit in Phase 3.
+reviewed by participants, a deploying organization or a security auditor. Independent security
+review and remediation are prerequisites for any real-data pilot; later changes need retesting.
 
 People who report may be at risk from powerful companies or governments. When security and
 convenience conflict, security wins (requirements §3, rule 8).
@@ -66,19 +66,21 @@ Wants to know who reported, or to read or destroy reports.
   admins can't read case content without one of those roles (NFR-SEC-8).
 - Two-factor sign-in required for case data (on by default).
 - Every case read, decision, status change, assignment and contact reveal is recorded in the
-  hash-chained audit log with the person and a reason; Reviewers can see who read a case
+  hash-chained audit log with the person and a fixed access-reason code; Reviewers can see who read a case
   (NFR-SEC-10).
-- Contact details need a separate, recorded reveal with a reason.
+- Contact details need a separate, recorded reveal with an allowlisted reason code. Arbitrary
+  narrative reasons are rejected. Status-change explanations remain encrypted, outside the audit.
 - **Gap:** an insider with database and key-file access can decrypt everything. Splitting key
   custody (KMS, or client-side encryption, NFR-SEC-5, a DECISION for Phase 2) is the mitigation.
 
 ### Someone with the reporter's device
 
-- Quick-exit button on every page, and Escape twice; `location.replace` so the page isn't one
-  "back" away (FR-INT-5).
+- Quick-exit button on every page. With JavaScript, Escape twice and `location.replace` replace
+  only the current history entry. Without JavaScript the control is an ordinary link (FR-INT-5).
 - Pages are `no-store` and `noindex`; the acknowledgement is the POST's own response, so the case
   code never appears in a URL or the history.
-- The case code and passphrase are shown once and not stored in the browser.
+- The application does not save the code/passphrase in local storage. Browser history, extensions,
+  screenshots, saved pages and printed copies are outside this guarantee.
 - **Gap:** browser history still shows the reporter domain. The intro page says so.
 
 ### A network observer
@@ -92,7 +94,8 @@ Wants to know who reported, or to read or destroy reports.
 
 - Master keys in a file outside the database; a compromised database alone isn't enough.
 - **Gap:** a compromised API host has the keys in memory and can read everything. Client-side
-  encryption (NFR-SEC-5) is the only full mitigation and is a Phase 2 DECISION.
+  encryption (NFR-SEC-5) could reduce server-side exposure but introduces other key and client
+  risks; it remains a Phase 2 DECISION, not a complete protection guarantee.
 - The API container has no Docker socket (it was removed with the Aktor pipeline script stages).
 
 ### A malicious "report" (against staff or agents)
@@ -105,7 +108,8 @@ Wants to know who reported, or to read or destroy reports.
 - Agents have no tool that publishes, sends, deletes or changes permissions (NFR-SEC-12); the
   triage path has no tools at all beyond `submit_triage`.
 - The eval set includes injection attempts (stop triaging, change status and send email, stop
-  redaction); `testigo-eval` checks that none changes the model's behavior.
+  redaction); `testigo-eval` checks bounded completion, tool names, final-copy redaction and the
+  danger flag. Classification terms can still change, and that is reported separately.
 - Report text is wrapped in neutral delimiters, and delimiter look-alikes in the report are
   neutralized before the model sees them.
 
@@ -116,7 +120,8 @@ Wants to know who reported, or to read or destroy reports.
 
 ## What Phase 1 must add
 
-1. Review this document with the deploying organization, then with a security auditor (Phase 3).
+1. Review this document with participants, the deploying organization and an independent security
+   auditor before a real-data pilot.
 2. Case-code follow-up with constant-time lookups, per-case and global rate limits, and lockout
    (NFR-SEC-9); the code and passphrase primitives exist, the endpoints don't.
 3. A DECISION on client-side encryption (NFR-SEC-5) with this threat model.
@@ -124,3 +129,21 @@ Wants to know who reported, or to read or destroy reports.
 5. Documented steps for checking, on a running deployment, that no reporter IP is logged
    (NFR-SEC-3): Caddy access logs off, API and reporter logs reviewed.
 6. Container images built in CI with an SBOM (NFR-SEC-13).
+
+## Model boundary and evidence limits
+
+The operator may enable `Testigo:LocalModelsOnly` to reject public model endpoints and explicitly
+cloud-backed model names (D7), while permitting local compatible APIs. Otherwise all supported providers remain
+configurable; Mock is still the default. Operators must ensure a permitted local address serves
+local weights and does not proxy data onward; an address check cannot attest server behavior.
+Rules replace detected identifiers before inference, then a model-assisted pass updates the
+final copy. The eval measures actual model-request identifiers separately from final-copy
+identifiers. Neither measurement proves anonymity.
+
+The standalone evaluation CLI may call hosted providers only with an explicit synthetic-data
+acknowledgment and the bundled set. It has no case-database connection. This is a developer
+experiment. All Phase 0 inputs, including application submissions, must remain synthetic.
+Real-data cloud use requires an outbound-data boundary that has not been implemented or validated.
+
+Current reporter tests inspect rendered HTML and resources in-process. They are not browser
+network captures, accessibility certification or real-device usability evidence.

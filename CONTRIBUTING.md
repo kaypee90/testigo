@@ -10,11 +10,22 @@ in Spanish, Portuguese or English are welcome.
 - Open an issue before large changes. Items marked **DECISION** need the maintainers' choice
   first; items marked **VALIDATE** are questions for the deploying organization and belong in
   configuration, not code ([`docs/open-questions.md`](docs/open-questions.md)).
-- Security problems go to the maintainers privately ([`SECURITY.md`](SECURITY.md)), never in a
-  public issue.
+- Do not post security details in public issues. The private contact is still pending
+  ([`SECURITY.md`](SECURITY.md)); a public request for a contact must contain no sensitive details.
 
 Adapting Testigo (a taxonomy, a form, a country, a language, a model provider, a new analysis)
 is described in [`docs/extending.md`](docs/extending.md).
+
+## Aportes sin código / non-code contributions
+
+Puedes proponer mejoras de lenguaje, revisar accesibilidad, comentar escenarios ficticios o
+explicar qué preguntas debería resolver el proyecto. No hace falta programar ni compartir una
+experiencia personal. Usa español, portugués o inglés. La participación con comunidades todavía
+es una propuesta: [`docs/community-participation.md`](docs/community-participation.md).
+
+Language review, accessibility feedback and critiques of fictional scenarios are welcome without
+code changes. Maintainers should record disagreements and explain scope decisions; a contribution
+does not imply endorsement or agreement to deploy.
 
 ## Rules that are never relaxed
 

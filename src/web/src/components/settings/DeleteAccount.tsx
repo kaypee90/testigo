@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { apiErrorMessage, deleteAccount, getAccountDeletion, type AccountDeletionPreview, type DeletionOrg } from "@/lib/api";
 
 const field = "rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
-const CONFIRM = "delete my account";
+const CONFIRM = "eliminar mi cuenta";
 
 /**
  * Settings → Account → Delete account (docs/platform.md#deleting-your-account). Shows exactly what
@@ -46,52 +46,53 @@ export function DeleteAccount() {
   return (
     <section className="space-y-3 rounded-xl border border-rose-200 bg-white p-5 shadow-sm dark:border-rose-900/60 dark:bg-zinc-900/60">
       <div>
-        <h2 className="text-sm font-semibold text-rose-700 dark:text-rose-400">Delete your account</h2>
+        <h2 className="text-sm font-semibold text-rose-700 dark:text-rose-400">Eliminar tu cuenta</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Permanently deletes your account and signs you out everywhere. Organizations you share with others keep their
-          work. Organizations only you belong to are deleted with your account. This can&apos;t be undone.
+          Elimina tu cuenta y cierra tus sesiones. Las organizaciones compartidas conservan su trabajo.
+          Revisa el efecto sobre cada organización antes de confirmar. Esto no sustituye un proceso
+          de retirada o eliminación de reportes, que aún no está implementado.
         </p>
       </div>
 
       {!open ? (
         <button onClick={() => setOpen(true)}
           className="rounded-lg border border-rose-300 px-3.5 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/40">
-          Delete account…
+          Eliminar cuenta…
         </button>
       ) : loadError ? (
         <p className="text-sm text-rose-600">{loadError}</p>
       ) : !preview ? (
-        <p className="text-sm text-zinc-500">Checking your organizations…</p>
+        <p className="text-sm text-zinc-500">Revisando tus organizaciones…</p>
       ) : (
         <div className="space-y-3">
           {preview.is_operator && (
             <p className="text-sm text-amber-700 dark:text-amber-400">
-              This is a platform operator&apos;s account. Remove its email from the server&apos;s operators before deleting it.
+              Esta cuenta administra la plataforma. Retira su correo de la configuración de operadores antes de eliminarla.
             </p>
           )}
-          <OrgList title="Need another owner first" tone="amber" orgs={preview.blocks}
-            note="You're the only owner. Make another member an owner under Organization → Members, or remove the other members." />
-          <OrgList title="Deleted with your account" tone="rose" orgs={preview.closes}
-            note="Nobody else belongs to these. Their tasks, workspaces, solutions, files, connections and saved keys are erased, and any paid plan stops renewing." />
-          <OrgList title="You'll leave" tone="zinc" orgs={preview.leaves}
-            note="The other members keep these organizations and everything in them, including work you did there." />
+          <OrgList title="Necesitan otra persona propietaria" tone="amber" orgs={preview.blocks}
+            note="Eres la única persona propietaria. Asigna otra en Organización → Integrantes o retira a los demás integrantes." />
+          <OrgList title="Se cerrarán con tu cuenta" tone="rose" orgs={preview.closes}
+            note="No tienen otros integrantes. El cierre de la cuenta no demuestra que se hayan eliminado todas las copias de los datos de casos." />
+          <OrgList title="Dejarás de participar" tone="zinc" orgs={preview.leaves}
+            note="Los demás integrantes conservan estas organizaciones y su trabajo, incluidas tus aportaciones." />
 
           {preview.allowed && (
             <form onSubmit={submit} className="flex max-w-sm flex-col gap-2">
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password"
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Tu contraseña" aria-label="Tu contraseña"
                 autoComplete="current-password" className={field} />
               <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                <span>Type <span className="font-semibold text-zinc-700 dark:text-zinc-300">{CONFIRM}</span> to confirm</span>
+                <span>Escribe <span className="font-semibold text-zinc-700 dark:text-zinc-300">{CONFIRM}</span> para confirmar</span>
                 <input value={typed} onChange={(e) => setTyped(e.target.value)} className={field} autoComplete="off" spellCheck={false} />
               </label>
               <div className="flex gap-2">
                 <button type="submit" disabled={busy || !password || typed.trim().toLowerCase() !== CONFIRM}
                   className="rounded-lg bg-rose-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-rose-700 disabled:opacity-50">
-                  {busy ? "Deleting…" : "Delete my account"}
+                  {busy ? "Eliminando…" : "Eliminar mi cuenta"}
                 </button>
                 <button type="button" onClick={() => { setOpen(false); setPassword(""); setTyped(""); setError(null); }}
                   className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
-                  Cancel
+                  Cancelar
                 </button>
               </div>
               {error && <p className="text-xs text-rose-600">{error}</p>}

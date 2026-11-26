@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Testigo.Infrastructure\Testigo.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AgentRuntime.IntegrationTests" />
+  </ItemGroup>
+
 </Project>

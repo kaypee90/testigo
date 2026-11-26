@@ -4,6 +4,8 @@ namespace Testigo.Infrastructure;
 public sealed class TestigoOptions
 {
     public const string Section = "Testigo";
+    /// <summary>Opt-in local endpoint enforcement (including compatible APIs). Mock remains the default provider.</summary>
+    public bool LocalModelsOnly { get; set; }
 
     public KeyOptions Keys { get; set; } = new();
     public IntakeOptions Intake { get; set; } = new();

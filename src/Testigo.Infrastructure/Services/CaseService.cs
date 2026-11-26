@@ -121,7 +121,7 @@ public sealed class CaseService(
         return new QueuePage([.. rows.Select(x => Summary(x.c, x.r, classifications.Where(k => k.CaseId == x.c.Id).ToList()))], total);
     }
 
-    public async Task<CaseResult<CaseView>> GetAsync(StaffContext staff, Guid caseId, string? reason, CancellationToken cancellationToken)
+    public async Task<CaseResult<CaseView>> GetAsync(StaffContext staff, Guid caseId, CancellationToken cancellationToken)
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var c = await db.Cases.AsNoTracking().FirstOrDefaultAsync(x => x.Id == caseId && x.OrganizationId == staff.OrganizationId, cancellationToken);
@@ -130,7 +130,7 @@ public sealed class CaseService(
         var org = staff.OrganizationId;
 
         // The read is recorded before anything is decrypted (NFR-SEC-10).
-        await audit.RecordAsync(org, staff.Actor, "case.read", c.Id, $"Lectura del caso {CaseNumbers.Format(c.Number)}", new { reason = Clip(reason) ?? "revisión del caso" }, cancellationToken: cancellationToken);
+        await audit.RecordAsync(org, staff.Actor, "case.read", c.Id, $"Lectura del caso {CaseNumbers.Format(c.Number)}", new { reason = "case_review" }, cancellationToken: cancellationToken);
 
         var text = await cipher.DecryptAsync(org, KeyPurpose.Content, r.FreeTextCipher, FieldAad.FreeText(r.Id), cancellationToken);
         var answers = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(
@@ -376,8 +376,9 @@ public sealed class CaseService(
     /// <summary>The reporter's contact details: a separate, recorded read that needs a reason (NFR-SEC-4, NFR-SEC-10).</summary>
     public async Task<CaseResult<(string Method, string Value)>> RevealContactAsync(StaffContext staff, Guid caseId, string? reason, CancellationToken cancellationToken)
     {
-        reason = Clip(reason);
-        if (string.IsNullOrEmpty(reason)) return CaseResult<(string, string)>.Fail(CaseError.Invalid, "Explica para qué necesitas el contacto.");
+        // NFR-OPS-4: an audit reason is a fixed code, never arbitrary text that could identify someone.
+        if (reason is not ("follow_up" or "clarification" or "support_referral"))
+            return CaseResult<(string, string)>.Fail(CaseError.Invalid, "Elige un motivo de contacto de la lista.");
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var c = await db.Cases.AsNoTracking().FirstOrDefaultAsync(x => x.Id == caseId && x.OrganizationId == staff.OrganizationId, cancellationToken);
         var contact = c is null ? null : await db.Contacts.AsNoTracking().FirstOrDefaultAsync(x => x.ReportId == c.ReportId, cancellationToken);
@@ -472,5 +473,4 @@ public sealed class CaseService(
 
     private static string Describe(ClassificationRow k) => k.Kind == "term" ? $"{k.Dimension}:{k.Term}" : k.Dimension;
     private static string Verb(string action) => action switch { "confirm" => "confirmada", "reject" => "descartada", "edit" => "corregida", _ => action };
-    private static string? Clip(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim().Length > 300 ? s.Trim()[..300] : s.Trim();
 }

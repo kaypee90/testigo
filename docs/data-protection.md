@@ -28,10 +28,10 @@ sensitive data.
 |---|---|---|---|---|---|
 | P1 | Receiving and storing a report | Free text, form answers, approximate place and date | Explicit consent of the reporter, given on the form (consent `processing`, required) with a versioned notice | Analysts and Reviewers of the receiving organization | Until retention rules are agreed (Q8); none are automatic in Phase 0 |
 | P2 | Contacting the reporter | Email, phone or Signal handle, only if given | Separate, optional consent (`contact`); stored under a separate key | Staff who reveal it, each reveal recorded with a reason | As P1, or until the reporter withdraws |
-| P3 | Automatic first-pass analysis (redaction, classification, danger flag, related reports) | Report text | Part of the purpose consented to in P1, explained in the notice; done on the organization's own server with a local model by default (NFR-AI-1) | No person; results are suggestions for staff | As P1 |
-| P4 | Sending report text to a hosted model (optional, off by default) | Redacted text only (NFR-AI-2) | Needs its own analysis: transfer to a processor, possibly abroad | The model provider | Per the provider's terms |
+| P3 | Automatic first-pass analysis (redaction, classification, danger flag, related reports) | Synthetic report text, including identifiers missed by rules | Mock by default; provider configured by the operator. Local-only enforcement is opt-in (D7) | Authorized staff see suggestions; privileged server operators may have technical access | As P1 |
+| P4 | Hosted model testing in the prototype or standalone eval | Synthetic narratives only; identifiers missed by rules can reach the provider | Provider configuration and an accurate notice; standalone eval additionally requires explicit acknowledgment and the bundled set (D7, NFR-AI-2) | The selected provider | Per provider terms; real-data processing is not validated |
 | P5 | Publishing anonymized, verified incidents and statistics (Phase 3) | Anonymized incident data | Separate, optional consent (`publication`) | Public | Indefinitely (open data) |
-| P6 | Audit log of staff actions | Staff identity, time, action, reason; no report content | Legitimate interest and legal obligations of the organization (accountability, chain of custody) | Reviewers, operators | Per the organization's policy |
+| P6 | Audit log of staff actions | Staff identity, time, action, fixed access/contact reason codes; narrative status reasons stored separately under encryption | Legitimate interest and legal obligations of the organization (accountability, chain of custody) | Reviewers, operators | Per the organization's policy |
 | P7 | Staff accounts | Name, email, password hash, 2FA secret, sessions | Employment or volunteer relationship | Operators | While the account exists |
 | P8 | Rate limiting on the public form | A salted hash of the client address, in memory only, salt rotated hourly | Legitimate interest (protecting the service); never stored or logged | No one | Minutes, in memory |
 
@@ -54,7 +54,7 @@ sensitive data.
    consent, and how is it recorded?
 3. Neural data under the 2021 reform: does it need protections beyond sensitive personal data?
 4. Retention periods and what "deletion" must cover (backups, audit log, published data).
-5. Using a hosted model on redacted text (P4): is it a transfer abroad, and what contract terms
-   are needed?
+5. Any real-data hosted analysis would require a new readiness decision, a reviewed outbound-data
+   boundary and legal analysis of transfers and processor terms. Phase 0 permits synthetic tests only.
 6. Requests from authorities or the reported party for reports or reporter identity: what the
    organization must and must not hand over.

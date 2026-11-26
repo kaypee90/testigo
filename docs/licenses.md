@@ -6,8 +6,10 @@ its dependencies, checked on 2026-11-26 from the package metadata on a developme
 the `package.json` of every production npm dependency of the staff dashboard
 (`npm ls --omit=dev --all`). Test-only packages aren't shipped and aren't listed.
 
-**Result:** every dependency is under a permissive license compatible with MPL-2.0. One native
-library is LGPL (see below). No dependency needs a paid service (NFR-OSS-4).
+**Metadata inventory:** dependencies include permissive licenses, CC-BY-4.0 data and an LGPL
+native library (see below). Distribution requires checking notice, attribution, source and
+replacement obligations; package metadata alone is not legal clearance. Local operation needs
+no paid service (NFR-OSS-4).
 
 ## .NET (API, Testigo, reporter app): 42 packages
 
@@ -52,7 +54,10 @@ binaries (LGPL-3.0-or-later, as above).
 
 - The synthetic eval set and demo reports in this repository are original and are covered by the
   repository license.
-- The open dataset license (FR-PAT-5, CC BY 4.0 proposed) is a separate decision with the host.
+- Original documentation, translations, taxonomy and design assets are also covered by the
+  repository license unless an individual file says otherwise; third-party notices remain applicable.
+- The public dataset license (FR-PAT-5, CC BY 4.0 proposed) remains a separate decision with
+  participants and a potential deploying organization. No real incident dataset is released.
 
 ## How to repeat the check
 

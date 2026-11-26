@@ -97,7 +97,7 @@ the default organization. Use it only on a machine nobody else can reach.
 
 ## Two-factor sign-in
 
-Anyone can turn on two-factor sign-in under **Settings → Account**. After that, signing in takes
+Anyone can turn on two-factor sign-in under **Ajustes → Cuenta**. After that, signing in takes
 the password and then a 6-digit code from an authenticator app (Google Authenticator, 1Password,
 Authy, Microsoft Authenticator and others).
 
@@ -140,7 +140,7 @@ turned off, reset by an operator, or when a recovery code is used.
 
 ## Deleting your account
 
-**Settings → Account → Delete your account** deletes the signed-in person's account. Before
+**Ajustes → Cuenta → Eliminar tu cuenta** deletes the signed-in person's account. Before
 asking for anything, it shows what happens to each organization they belong to:
 
 | Their organization | What happens |

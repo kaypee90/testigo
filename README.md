@@ -12,27 +12,31 @@
 
 ## Español
 
-**Testigo** es una plataforma abierta para reportar y analizar daños causados por la inteligencia
-artificial y la neurotecnología en América Latina, empezando por Chile.
+**Testigo** es un prototipo independiente de código abierto para explorar cómo documentar posibles
+daños asociados a la IA y la neurotecnología en América Latina, empezando por escenarios de Chile.
+No se ha contactado a ninguna organización sobre esta propuesta ni se ha acordado un despliegue.
+El alcance y la gobernanza se definirían con participantes y una posible organización colaboradora.
 
 ### Qué hace
 
-- **Reporte seguro y anónimo.** Un formulario público en español (y en inglés en `/en`, un borrador
-  por revisar), separado del panel interno, que
-  funciona sin JavaScript, en teléfonos antiguos y con conexiones lentas. No carga nada de
-  terceros. Quien reporta recibe un código de caso y una frase de acceso para hacer seguimiento,
-  sin cuenta ni correo.
+- **Formulario sin cuenta, con medidas de protección.** En español y en inglés (`/en`, borrador
+  por revisar), separado del panel interno y renderizado en el servidor. Funciona sin JavaScript;
+  la accesibilidad, los teléfonos antiguos y las conexiones lentas requieren validación adicional.
+  Usa recursos propios. Genera un código y una frase para mostrar el flujo previsto, pero el
+  seguimiento aún no está disponible. No garantiza anonimato.
 - **Evidencia protegida.** El contenido de los reportes se cifra campo por campo antes de llegar a
   la base de datos. Cada lectura queda en un registro de auditoría encadenado.
 - **Análisis asistido, decisiones humanas.** Un modelo de IA propone una clasificación (tecnología,
-  tipo de daño, derechos afectados), marcan urgencias y sugieren reportes relacionados. Cada
+  tipo de daño, derechos afectados), marca urgencias y sugiere reportes relacionados. Cada
   sugerencia debe citar textualmente el reporte, y el sistema verifica la cita en código antes de
   mostrarla. Una persona confirma, corrige o descarta cada sugerencia. El modelo no tiene
   herramientas para publicar, enviar mensajes, borrar ni cambiar permisos.
-- **Datos personales fuera del modelo.** Antes de que un modelo lea un reporte, se reemplazan los
-  datos identificables (RUT, teléfonos, correos, direcciones, nombres) por marcadores.
-- **Autoalojable.** Un solo `docker compose up`, con modelos locales (Ollama) como opción por
-  defecto y sin depender de una nube ni de un proveedor de IA.
+- **Sustitución de identificadores detectados.** Las reglas actúan antes del modelo y una segunda
+  pasada asistida actualiza la copia después. Ambas pueden omitir datos. Se pueden configurar
+  proveedores locales o de nube para pruebas sintéticas; `TESTIGO_LOCAL_MODELS_ONLY=true`
+  restringe el servidor a Mock y endpoints locales (Ollama o APIs compatibles). Mock sigue siendo el valor por defecto.
+- **Autoalojable.** `docker compose up` usa Mock por defecto; Ollama local es una opción.
+  No se necesita un servicio de IA de pago.
 
 ### Probarlo
 
@@ -45,11 +49,13 @@ docker compose up --build
 - Formulario público de reporte: http://localhost:3102 (en inglés: http://localhost:3102/en)
 - Panel del equipo: http://localhost:3101 (usuario `admin`, contraseña `admin`, solo en la demo).
   Los casos están en **Casos**. Por defecto los casos exigen verificación en dos pasos: actívala en
-  Settings → Account, o levanta la demo con `TESTIGO_REQUIRE_2FA=false` solo en tu máquina.
+  Ajustes → Cuenta, o levanta la demo con `TESTIGO_REQUIRE_2FA=false` solo en tu máquina.
 - API: http://localhost:5180
 
 La demo trae 14 reportes ficticios ya analizados. El modelo por defecto es `Mock`: determinista,
-sin clave y sin enviar datos a nadie. Todos los datos de la demo son ficticios.
+sin clave y sin enviar datos a un proveedor. Los envíos persisten; no hay borrado automático.
+Todos los datos deben ser ficticios. Una demo pública interactiva requiere medidas adicionales
+de descarte/restablecimiento; por ahora puede mostrarse mediante una grabación.
 
 ### Evaluación
 
@@ -58,10 +64,11 @@ dotnet run --project src/Testigo.Evals
 ```
 
 Sobre 30 reportes sintéticos (`evals/testigo`), con el modelo Mock: validez de citas 100 %
-(151/151), fuga de datos personales en la copia anonimizada 0 de 11 identificadores, detección de
-peligro inmediato 100 %, resultados repetibles 30/30, 3 de 3 intentos de inyección sin efecto en
-el comportamiento. Los números completos, incluidos los débiles (clasificación F1 0,68, duplicados
-no detectados), están más abajo en inglés.
+(151/151), 0 de 11 identificadores conocidos en la **copia final**, peligro inmediato detectado
+en 3 de 3 casos etiquetados y resultados repetibles 30/30. Eso no demuestra anonimato: el
+evaluador también mide los identificadores en las solicitudes al modelo, antes de la segunda
+pasada. En 3 pruebas de inyección no hubo acciones externas, pero una alteró los términos
+sugeridos. Los resultados y límites están más abajo en inglés.
 
 ### Adaptarlo
 
@@ -71,22 +78,25 @@ modelos o un análisis: [`docs/extending.md`](docs/extending.md) (en inglés).
 
 ### Estado
 
-Fase 0 (prototipo). Las preguntas abiertas para la organización anfitriona están en
-[`docs/open-questions.md`](docs/open-questions.md).
+Fase 0 (prototipo). La [participación propuesta](docs/community-participation.md) incluye decidir
+si la herramienta es útil y qué no debe recogerse o publicarse. No se ha realizado co-diseño.
+Las preguntas abiertas están en [`docs/open-questions.md`](docs/open-questions.md).
 
 ---
 
 ## English
 
-**Testigo** ("witness") is an open platform for reporting and analyzing harms from artificial
-intelligence and neurotechnology in Latin America, starting in Chile.
+**Testigo** ("witness") is an independent, open-source prototype exploring documentation of
+possible AI and neurotechnology harms in Latin America, starting with Chilean scenarios.
+No organization has been contacted about this proposal, endorsed it or agreed to deploy it.
+Scope and governance would be developed with participants and a potential deploying organization.
 
 ### The problem
 
-AI systems and neurotechnology (consumer EEG headsets, neural-data apps, emotion recognition,
-automated decisions) already affect people's rights in the region, but there is no trusted, safe
-way for people to report these incidents, or for advocates to analyze them as evidence. The
-region's cases are largely missing from global incident trackers.
+Testigo explores whether a locally governed, Spanish-first reporting workflow could complement
+existing advocacy, case-management and incident-tracking efforts. Unmet needs, existing options
+and conditions for safe use still need validation with affected people and local organizations.
+It processes narratives, not neural measurements, and does not establish causation or legal liability.
 
 ### What is technically different
 
@@ -94,14 +104,18 @@ region's cases are largely missing from global incident trackers.
   (with neural data and mental integrity as first-class dimensions). Every suggestion must carry
   an exact quote from the report; the runtime checks the quote against the original text and
   drops any suggestion it can't ground. Citation validity is measured on every eval run.
-- **Redaction before the model.** Identifying data, including Chilean RUTs validated by their check
-  digit, is replaced with typed placeholders before any model sees a report. Redaction leakage is
-  measured on every eval run.
+- **Two-stage redaction, with limits.** Rules replace detected identifiers before inference;
+  model-assisted redaction updates the final copy afterward. Either can miss identifiers or
+  identifying context. Actual model-request exposure and final-copy leakage are measured separately.
+  All supported providers remain configurable for synthetic testing. Opt in to
+  `TESTIGO_LOCAL_MODELS_ONLY=true` to enforce Mock/operator-controlled local endpoints, including
+  Ollama and local OpenAI-compatible servers.
+  Mock remains the default; see [`docs/llm-settings.md`](docs/llm-settings.md).
 - **The code enforces the limits, not the model.** Triage is a bounded pipeline: one model call
   per report, through a single structured tool, with every result validated in code. When a call
   fails or a check doesn't pass, the case goes to a person as "analysis incomplete"; nothing
   retries in a loop. The model has no tool that publishes, sends, deletes or changes permissions.
-- **An intake built for people at risk.** Anonymous by default, Spanish first, server-rendered,
+- **A privacy-conscious intake prototype.** No account required, Spanish first, server-rendered,
   works with JavaScript off, a strict Content Security Policy, a quick-exit button, and no
   third-party requests of any kind.
 - **Tamper-evident evidence.** Field-level envelope encryption with key rotation, and a
@@ -118,13 +132,15 @@ docker compose up --build
 - Public report form: http://localhost:3102 (Spanish; English at http://localhost:3102/en, a draft
   awaiting human review)
 - Staff dashboard: http://localhost:3101 (`admin` / `admin`, demo only). Cases are under
-  **Casos**. Case data needs two-factor sign-in by default: turn it on under Settings → Account,
+  **Casos**. Case data needs two-factor sign-in by default: turn it on under Ajustes → Cuenta,
   or start the demo with `TESTIGO_REQUIRE_2FA=false` on your own machine only.
 - API: http://localhost:5180
 
 The demo ships 14 synthetic reports, already analyzed. The default model is `Mock`:
 deterministic, no key, and nothing leaves the machine. To use a local model, see
 `COMPOSE_PROFILES=ollama` in [`.env.example`](.env.example).
+Submissions persist; automatic deletion and reporter withdrawal are not implemented. The current
+setup is a local synthetic demo, not a real reporting service.
 
 ### Tests and evaluation
 
@@ -147,8 +163,9 @@ Results with the Mock provider (2026-11-26):
 | Metric | Target (§10.2) | Result |
 |---|---|---|
 | Citation validity (every quote is in the report) | 100% | **100%** (151/151) |
-| Identifiers leaked into redacted copies | 0 | **0** of 11 |
-| Immediate-danger recall | ≥ 98% | **100%** (precision 100%) |
+| Known identifiers remaining in the final analysis copy | 0 | **0** of 11 |
+| Known identifiers in actual model requests | report separately | **1 of 11** across 63 Mock requests; final-copy zero does not imply request zero |
+| Immediate-danger recall | ≥ 98% | **100%** on 3 labeled danger cases (precision 100%) |
 | Determinism (same input, same result) | 100% | **30/30** |
 | Prompt injections that change agent behavior | 0 | **0** of 3 (one injected sentence still added a term through a keyword cue) |
 | Classification against the labels, per dimension | report it | F1 0.59–0.87, 0.68 overall (precision 87%, recall 56%) |
@@ -159,26 +176,33 @@ classification numbers say little about a real model. The first eval run found a
 gap ("Mi pasaporte es AB1234567"), now fixed. Duplicate detection is a bag-of-words baseline until
 hybrid search with pgvector (FR-ANA-5) replaces it.
 
+This set contains 28 Spanish, one Portuguese and one English example. It is a pipeline smoke
+test, not evidence of regional-language quality or production safety. A future benchmark needs
+held-out/adversarial scenarios, more danger cases, per-language results and recorded model/hardware
+versions. Synthetic cloud evaluation instructions: [`docs/evals.md`](docs/evals.md).
+
 ### For reviewers: what this prototype shows
 
 - **A technical core.** A reporting pipeline where the safety properties are enforced in code, not
   asked of a model: field-level envelope encryption, a separate reporter origin with no
   third-party requests, a single-tool bounded model call whose every quote and term is checked in
   code, and a hash-chained audit trail of every staff read.
-- **An emerging-technology problem.** Neural data and mental integrity are first-class dimensions
-  of the harm taxonomy, alongside AI harms such as automated decisions and emotion recognition;
-  Chile protects mental integrity in its constitution since 2021, and there is no safe channel
-  for people to report these harms.
-- **What is new.** Grounded, redacted-before-the-model triage of human-rights reports, measured on
-  every commit (citation validity and redaction leakage are CI gates), built for people at risk:
-  anonymous, no JavaScript needed, works on a cheap phone, in Spanish and (as a draft) English.
-- **Evidence it can be built.** It runs today with `docker compose up`: the report form, encrypted
-  storage, automatic triage, the analyst queue and case view. 144 domain and reporter tests, the
-  platform's unit and integration suites, and the eval above.
-- **Benefit to communities, with the host.** Everything that depends on the people it serves (the
-  taxonomy, the form wording, support contacts, danger rules, retention) is data or configuration,
-  listed as open questions to settle with the organization that deploys it
-  ([`docs/open-questions.md`](docs/open-questions.md)).
+- **A proposed focus.** Neural data and mental integrity appear in the starter taxonomy alongside
+  automated decisions and emotion recognition. Their usefulness and wording need participant review.
+- **An integrated workflow.** Spanish-first intake, encrypted storage, grounded triage and human
+  review in one prototype. This is a proposed adaptation, not a claim that other reporting tools
+  do not exist or that this tool is uniquely safe.
+- **Reproducible checks.** Unit/reporter suites, container-backed integration tests and the Mock
+  eval can be run with the commands above. Record a fresh build and executed-test counts for the
+  revision being demonstrated; old binaries are not evidence for new source.
+- **Community participation: proposed approach.** Participants would help decide whether the tool
+  is useful, what to collect, what not to publish and whether to pilot at all. See
+  [`docs/community-participation.md`](docs/community-participation.md). Configurable forms and taxonomy
+  support this process but do not establish completed co-design or community ownership.
+
+Server-rendered forms, labels and local resources are implemented. Browser-network checks,
+mobile/slow-device testing, axe and a manual screen-reader review are still needed before
+claiming WCAG conformance or demonstrated 3G usability.
 
 ### Repository layout
 
@@ -213,7 +237,7 @@ behind one interface; new analyses follow the triage pattern. See
 
 ### Status
 
-Phase 0 (prototype). Open questions for the host are in
+Phase 0 (prototype). Open questions for participants and a potential deploying organization are in
 [`docs/open-questions.md`](docs/open-questions.md), the threat model in
 [`docs/threat-model.md`](docs/threat-model.md), and the security policy in
 [`SECURITY.md`](SECURITY.md). Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md) and

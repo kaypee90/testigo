@@ -1,10 +1,12 @@
 using AgentRuntime.Api.Platform;
+using AgentRuntime.LLM;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Testigo.Forms;
 using Testigo.Infrastructure;
 using Testigo.Infrastructure.Services;
+using Testigo.Infrastructure.Triage;
 using Testigo.Support;
 using Testigo.Taxonomy;
 
@@ -30,6 +32,7 @@ public sealed class TestigoIntakeController(IntakeGate gate, IntakeService intak
     {
         if (!Allowed()) return NotFound();
         var form = intake.Form.Supports(lang) ? intake.Form.In(lang) : intake.Form;
+        var aiMode = AiMode(configuration["Llm:Provider"], configuration["Llm:BaseUrl"], configuration["Llm:Model"]);
         return Ok(new
         {
             version = form.Version,
@@ -52,7 +55,9 @@ public sealed class TestigoIntakeController(IntakeGate gate, IntakeService intak
             contact_methods = form.ContactMethods.Select(m => new { key = m.Key, label = m.Label }),
             passphrase_min_length = passphraseOptions.MinimumLength,
             contacts = contacts.Countries.ToDictionary(c => c.Key, c => c.Value.In(form.Language)),
-            ai_mode = AiMode(configuration["Llm:Provider"]),
+            ai_mode = aiMode,
+            ai_provider = LlmOptions.CanonicalProvider(configuration["Llm:Provider"]),
+            ai_endpoint = PublicEndpoint(aiMode, configuration["Llm:BaseUrl"]),
         });
     }
 
@@ -61,12 +66,27 @@ public sealed class TestigoIntakeController(IntakeGate gate, IntakeService intak
     /// NFR-AI-1): "local" for a model on our own servers, "mock" for the scripted demo model,
     /// "cloud" for anything else.
     /// </summary>
-    internal static string AiMode(string? provider) => provider?.Trim().ToLowerInvariant() switch
+    internal static string AiMode(string? provider, string? baseUrl = null, string? model = null)
     {
-        null or "" or "mock" => "mock",
-        "ollama" => "local",
-        _ => "cloud",
-    };
+        if (LlmOptions.CanonicalProvider(provider) == "Mock") return "mock";
+        try
+        {
+            CaseModelPolicy.Validate(provider, baseUrl, model, localOnly: true);
+            return "local";
+        }
+        catch (InvalidOperationException)
+        {
+            return "cloud";
+        }
+    }
+
+    /// <summary>
+    /// The model endpoint's host for the reporter's notice, only when text leaves for a hosted
+    /// service (FR-INT-2). A local server's address (a private IP, "ollama", a container host) stays
+    /// private: the reporter page is public. Host only, never user info, path, query or credentials.
+    /// </summary>
+    internal static string? PublicEndpoint(string aiMode, string? baseUrl) =>
+        aiMode == "cloud" && Uri.TryCreate(baseUrl, UriKind.Absolute, out var endpoint) ? endpoint.Host : null;
 
     /// <summary>Receives a report. 400 with field errors when it doesn't validate; nothing is stored then.</summary>
     [HttpPost("reports")]

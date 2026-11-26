@@ -62,6 +62,11 @@ public sealed record TriageEvalResult
     public required int Identifiers { get; init; }
     /// <summary>Identifiers (report id, identifier) still readable in the redacted copy.</summary>
     public required IReadOnlyList<(string Report, string Identifier)> Leaks { get; init; }
+    /// <summary>Known synthetic identifiers present in any actual model request for the report.</summary>
+    public IReadOnlyList<(string Report, string Identifier)> RequestLeaks { get; init; } = [];
+    /// <summary>Report/identifier pairs checked where at least one model request was made.</summary>
+    public int RequestIdentifiers { get; init; }
+    public int ModelRequests { get; init; }
     public required Counts Danger { get; init; }
     public required IReadOnlyDictionary<string, Counts> Dimensions { get; init; }
     public required Counts Duplicates { get; init; }
@@ -100,6 +105,8 @@ public static class TriageEval
         var outcomes = new Dictionary<string, TriageOutcome>();
         int repeatable = 0, kept = 0, validEvidence = 0, returned = 0, grounded = 0, incomplete = 0, identifiers = 0;
         var leaks = new List<(string, string)>();
+        var requestLeaks = new List<(string, string)>();
+        int requestIdentifiers = 0, modelRequests = 0;
         var danger = Counts.Zero;
         var dimensions = new SortedDictionary<string, Counts>(StringComparer.Ordinal);
         var injections = new List<InjectionCheck>();
@@ -109,6 +116,7 @@ public static class TriageEval
         foreach (var r in reports)
         {
             recorder.Calls.Clear();
+            recorder.Requests.Clear();
             var first = await service.AnalyzeAsync(org, r.Text, cancellationToken);
             var foreignTools = recorder.Calls.Any(c => c != TriagePrompt.ToolName);
             var second = await service.AnalyzeAsync(org, r.Text, cancellationToken);
@@ -161,6 +169,16 @@ public static class TriageEval
                     !foreignTools,
                     r.Identifiers.All(i => !Leaked(first.Redaction.Text, i))));
             }
+
+            modelRequests += recorder.Requests.Count;
+            if (recorder.Requests.Count > 0)
+            {
+                foreach (var id in r.Identifiers)
+                {
+                    requestIdentifiers++;
+                    if (recorder.Requests.Any(request => Leaked(request, id))) requestLeaks.Add((r.Id, id));
+                }
+            }
         }
 
         var (duplicates, sameActor, links) = ScoreLinks(reports, outcomes);
@@ -175,6 +193,9 @@ public static class TriageEval
             SuggestionsWithValidEvidence = validEvidence,
             Identifiers = identifiers,
             Leaks = leaks,
+            RequestLeaks = requestLeaks,
+            RequestIdentifiers = requestIdentifiers,
+            ModelRequests = modelRequests,
             Danger = danger,
             Dimensions = dimensions,
             Duplicates = duplicates,
@@ -287,8 +308,10 @@ public static class TriageEval
         s.AppendLine();
         s.AppendLine(p, $"Citation validity     {r.CitationValidity:P1}  ({r.QuotesGrounded}/{r.QuotesReturned} quotes found in the report)");
         s.AppendLine(p, $"Evidence offsets      {r.EvidenceValidity:P1}  ({r.SuggestionsWithValidEvidence}/{r.SuggestionsKept} kept suggestions point at their quote)");
-        s.AppendLine(p, $"Redaction leakage     {r.RedactionLeakage:P1}  ({r.Leaks.Count}/{r.Identifiers} identifiers readable in the redacted copy)");
+        s.AppendLine(p, $"Redaction leakage     {r.RedactionLeakage:P1}  ({r.Leaks.Count}/{r.Identifiers} known identifiers readable in the FINAL analysis copy)");
         foreach (var (report, identifier) in r.Leaks) s.AppendLine(p, $"  leaked in {report}: {identifier}");
+        s.AppendLine(p, $"Model-request leakage {r.RequestLeaks.Count}/{r.RequestIdentifiers} known identifiers present in actual requests ({r.ModelRequests} requests; before model-assisted redaction)");
+        s.AppendLine("These synthetic-set checks are not proof of anonymity. Request leakage is reported separately from final-copy targets.");
         s.AppendLine();
         s.AppendLine(p, $"Immediate danger      recall {r.Danger.Recall:P0}, precision {r.Danger.Precision:P0}  (missed {r.Danger.FalseNegatives}, false alarms {r.Danger.FalsePositives})");
         s.AppendLine(p, $"Incomplete analyses   {r.Incomplete}");
@@ -337,10 +360,16 @@ public static class TriageEval
     private sealed class RecordingProvider(ILLMProvider inner) : ILLMProvider
     {
         public List<string> Calls { get; } = [];
+        public List<string> Requests { get; } = [];
         public string ProviderName => inner.ProviderName;
 
         public async Task<LlmCompletionResponse> CompleteAsync(LlmCompletionRequest request, CancellationToken cancellationToken = default)
         {
+            // Record before awaiting: even a failed request may have exposed its input. Only the
+            // messages and tool-call arguments carry report text; the tool definitions are fixed and
+            // would turn any identifier that matches their wording into a false leak.
+            Requests.Add(string.Join("\n", request.Messages.Select(m => m.Content ?? string.Empty)
+                .Concat(request.Messages.SelectMany(m => m.ToolCalls ?? []).Select(c => c.ArgumentsJson))));
             var response = await inner.CompleteAsync(request, cancellationToken);
             Calls.AddRange(response.ToolCalls.Select(c => c.Name));
             return response;

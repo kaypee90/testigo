@@ -30,6 +30,21 @@ public sealed class LlmOptions
     /// <summary>Ask providers that support it (Ollama) not to generate a reasoning trace.</summary>
     public bool DisableThinking { get; set; } = true;
 
+    /// <summary>The providers this server knows, in their canonical spelling.</summary>
+    public static IReadOnlyList<string> KnownProviders { get; } = ["Mock", "Ollama", "OpenAI", "Anthropic", "Gemini"];
+
+    /// <summary>
+    /// The canonical name for a configured provider: blank means Mock, and a known name matches in
+    /// any case ("ollama" is Ollama). An unknown name comes back trimmed but otherwise unchanged, so
+    /// callers can reject it instead of silently using another provider.
+    /// </summary>
+    public static string CanonicalProvider(string? configured)
+    {
+        if (string.IsNullOrWhiteSpace(configured)) return "Mock";
+        var name = configured.Trim();
+        return KnownProviders.FirstOrDefault(p => p.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? name;
+    }
+
     /// <summary>
     /// A base URL as the providers use it. OpenAI-compatible services document theirs with the API
     /// version on the end, but the OpenAI provider adds <c>v1/chat/completions</c> itself, so a
