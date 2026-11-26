@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "reporter": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:3102",
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
+    }
+  }
+}

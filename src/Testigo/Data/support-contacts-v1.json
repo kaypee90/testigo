@@ -1,0 +1,59 @@
+{
+ "version": "v1",
+ "note": "VALIDATE (FR-ADM-6, open question 11): placeholders to be confirmed with the deploying organization before any real use. Numbers are the public Chilean emergency services; support organizations are not listed until confirmed.",
+ "countries": {
+  "CL": {
+   "emergency": [
+    {
+     "label": "Carabineros (emergencias policiales)",
+     "phone": "133",
+     "labels": {
+      "en": "Carabineros (police emergencies)"
+     }
+    },
+    {
+     "label": "SAMU (emergencias médicas)",
+     "phone": "131",
+     "labels": {
+      "en": "SAMU (medical emergencies)"
+     }
+    },
+    {
+     "label": "Bomberos",
+     "phone": "132",
+     "labels": {
+      "en": "Fire service (Bomberos)"
+     }
+    }
+   ],
+   "support": [
+    {
+     "label": "Línea de prevención del suicidio (Ministerio de Salud)",
+     "phone": "*4141",
+     "validate": true,
+     "labels": {
+      "en": "Suicide prevention line (Ministry of Health)"
+     }
+    },
+    {
+     "label": "Apoyo psicológico: por confirmar",
+     "phone": null,
+     "labels": {
+      "en": "Psychological support: to be confirmed"
+     }
+    },
+    {
+     "label": "Orientación legal: por confirmar",
+     "phone": null,
+     "labels": {
+      "en": "Legal guidance: to be confirmed"
+     }
+    }
+   ],
+   "response_time": "Este prototipo no responde reportes: es una demostración con datos ficticios.",
+   "response_times": {
+    "en": "This prototype doesn't answer reports: it's a demonstration with synthetic data."
+   }
+  }
+ }
+}

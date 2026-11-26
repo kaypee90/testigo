@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/.next/
+.git/
+.env
+workspace/
+# Keys and dev secrets never go into an image (NFR-SEC-4, NFR-OSS-2).
+**/keys/
+**/*.key
+.testigo-dev/
+**/.testigo-dev/

@@ -1,0 +1,81 @@
+"use client";
+
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { UNAUTHORIZED_EVENT, getMe } from "@/lib/api";
+import type { Me } from "@/lib/platformTypes";
+import { isPublicPath } from "@/lib/publicPaths";
+
+interface AuthState {
+  me: Me | null;
+  refresh: () => Promise<Me | null>;
+}
+
+const AuthContext = createContext<AuthState>({ me: null, refresh: async () => null });
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
+
+/** Loads who's signed in and keeps everything but the landing and sign-in pages behind it. */
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [me, setMe] = useState<Me | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+  const isPublic = isPublicPath(pathname);
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await getMe();
+      setMe(next);
+      setError(null);
+      return next;
+    } catch {
+      setError("We can't connect right now. Please try again in a moment.");
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMe()
+      .then((next) => { if (!cancelled) { setMe(next); setError(null); } })
+      .catch(() => { if (!cancelled) setError("We can't connect right now. Please try again in a moment."); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // A 401 from any call means the session ended (signed out elsewhere, expired, removed).
+  useEffect(() => {
+    const onUnauthorized = () => { void refresh(); };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, [refresh]);
+
+  const mustSignIn = me !== null && !me.authenticated && me.server.auth_mode === "accounts" && !isPublic;
+  useEffect(() => {
+    if (mustSignIn) {
+      const next = window.location.pathname + window.location.search;
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    }
+  }, [mustSignIn, router]);
+
+  if (error && !me) {
+    return (
+      <div className="m-auto max-w-sm p-8 text-center">
+        <div className="text-sm font-medium text-rose-600 dark:text-rose-400">{error}</div>
+        <p className="mt-1 text-xs text-zinc-500">If this keeps happening, reload the page or come back shortly.</p>
+      </div>
+    );
+  }
+
+  if (!isPublic && (me === null || mustSignIn)) {
+    return (
+      <div className="m-auto flex items-center gap-2 p-8 text-sm text-zinc-500">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-500" /> Loading…
+      </div>
+    );
+  }
+
+  return <AuthContext.Provider value={{ me, refresh }}>{children}</AuthContext.Provider>;
+}

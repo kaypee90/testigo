@@ -1,0 +1,60 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Node / Next.js
+node_modules/
+.next/
+next-env.d.ts
+
+# Env / secrets
+.env
+.env.local
+
+# Agent tool workspace (filesystem_write / shell_exec sandbox output). Anchored to where the API
+# creates it (Tools:WorkspaceRoot = ./workspace); a bare "workspace/" would also hide source
+# folders such as src/web/src/components/workspace.
+/workspace/
+src/AgentRuntime.Api/workspace/
+
+# Editor / OS
+.vs/
+.vscode/
+*.swp
+.DS_Store
+
+# Generated secrets-vault key (Secrets:KeyFile) — never commit it.
+/keys/
+src/AgentRuntime.Api/keys/
+*.key
+# Local development keys for Testigo (launch.json): generated on first run, never committed.
+.testigo-dev/
+
+# Eval runs (aktor-eval --out); the committed baseline lives in evals/baseline.
+/evals/reports/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Internal notes and strategy (kept locally, never published)
+internal/
+
+# Testigo: local secrets and data never committed
+*.pem
+*.pfx
+TestResults/
+/data/
+/storage/
+/secrets/
+src/AgentRuntime.Api/storage/
+
+# The requirements document stays local only.
+docs/*-platform-requirements.md
+
+# Local tool settings and working notes stay out of the repository.
+.claude/
+CLAUDE.md
+AGENTS.md
+docs/decisions.md

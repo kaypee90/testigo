@@ -1,0 +1,16 @@
+# Gitleaks settings (NFR-OSS-2). The default rules all apply; the only exceptions are the
+# synthetic values below, which tests use as passwords and keys. They are not real secrets.
+# Add a value here only if it is invented for a test, never a real or production key.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic test passwords and keys"
+regexTarget = "secret"
+regexes = [
+  '''^correct\-horse\-battery\-staple\-1$''',
+  '''^test\-intake\-key\-0123456789abcdefghijklmnop$''',
+  '''^clave\-de\-prueba\-0123456789abcdefghij$''',
+  '''^sk\-test\-VERY\-SECRET\-123$''',
+]

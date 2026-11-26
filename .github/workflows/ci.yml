@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # NFR-OSS-2: no secrets in the code or its history. Scans every commit, not just the diff.
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.0 git /repo --redact --verbose --config /repo/.gitleaks.toml
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Build
+        run: dotnet build Testigo.slnx -c Release
+
+      - name: Unit tests
+        run: dotnet test src/AgentRuntime.Tests -c Release --no-build
+
+      - name: Testigo unit tests (domain, reporter app, eval scorer)
+        run: dotnet test src/Testigo.Tests -c Release --no-build
+
+      # Requirements §10.2 with the Mock provider: fails when citation validity, redaction
+      # leakage, danger recall, injection resistance or determinism misses its target.
+      - name: Testigo triage eval (Mock provider)
+        run: dotnet run --project src/Testigo.Evals -c Release --no-build
+
+  # The integration tests can't run in parallel inside one process (they share static test state,
+  # see src/AgentRuntime.IntegrationTests/AssemblyInfo.cs), so they're split across runners
+  # instead: each shard is its own process and runs every SHARDS-th test class. The API tests use
+  # a throwaway pgvector container (Docker is available on GitHub's Ubuntu runners).
+  integration-tests:
+    name: integration-tests (${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      SHARDS: 4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # Pulled while the build runs, so the first API test doesn't wait for it.
+      - name: Pre-pull Postgres image
+        run: nohup docker pull -q pgvector/pgvector:pg16 > /dev/null 2>&1 &
+
+      - name: Build
+        run: dotnet build src/AgentRuntime.IntegrationTests -c Release
+
+      - name: Pick this shard's test classes
+        id: shard
+        working-directory: src/AgentRuntime.IntegrationTests
+        run: |
+          # Top-level classes, sorted, dealt out round-robin. The trailing '.' stops a class name
+          # from also matching longer names that start with it. Non-test classes (fixtures)
+          # match no tests and are harmless.
+          classes=$(grep -ohP '^public (sealed )?class \K\w+' *.cs | sort -u)
+          filter=$(echo "$classes" | awk -v n="$SHARDS" -v i="${{ matrix.shard }}" \
+            '(NR - 1) % n == i { printf "%sFullyQualifiedName~AgentRuntime.IntegrationTests.%s.", sep, $0; sep = "|" }')
+          echo "Classes in this shard:"; echo "$classes" | awk -v n="$SHARDS" -v i="${{ matrix.shard }}" '(NR - 1) % n == i'
+          echo "filter=$filter" >> "$GITHUB_OUTPUT"
+
+      - name: Integration tests
+        run: >
+          dotnet test src/AgentRuntime.IntegrationTests -c Release --no-build
+          --filter "${{ steps.shard.outputs.filter }}"
+          --logger "console;verbosity=normal"
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+      - run: npm audit --omit=dev
+

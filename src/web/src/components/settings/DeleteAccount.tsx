@@ -1,0 +1,118 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { apiErrorMessage, deleteAccount, getAccountDeletion, type AccountDeletionPreview, type DeletionOrg } from "@/lib/api";
+
+const field = "rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900";
+const CONFIRM = "delete my account";
+
+/**
+ * Settings → Account → Delete account (docs/platform.md#deleting-your-account). Shows exactly what
+ * happens to each organization first: the ones left, the ones closed and erased with the account,
+ * and the ones that need another owner before it can go. Asks for the password and a typed phrase.
+ */
+export function DeleteAccount() {
+  const [preview, setPreview] = useState<AccountDeletionPreview | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let stopped = false;
+    getAccountDeletion()
+      .then((p) => !stopped && setPreview(p))
+      .catch((err) => !stopped && setLoadError(apiErrorMessage(err)));
+    return () => { stopped = true; };
+  }, [open]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteAccount(password);
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a full reload drops everything loaded while signed in
+      window.location.assign("/login");
+    } catch (err) {
+      setError(apiErrorMessage(err));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-rose-200 bg-white p-5 shadow-sm dark:border-rose-900/60 dark:bg-zinc-900/60">
+      <div>
+        <h2 className="text-sm font-semibold text-rose-700 dark:text-rose-400">Delete your account</h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          Permanently deletes your account and signs you out everywhere. Organizations you share with others keep their
+          work. Organizations only you belong to are deleted with your account. This can&apos;t be undone.
+        </p>
+      </div>
+
+      {!open ? (
+        <button onClick={() => setOpen(true)}
+          className="rounded-lg border border-rose-300 px-3.5 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/40">
+          Delete account…
+        </button>
+      ) : loadError ? (
+        <p className="text-sm text-rose-600">{loadError}</p>
+      ) : !preview ? (
+        <p className="text-sm text-zinc-500">Checking your organizations…</p>
+      ) : (
+        <div className="space-y-3">
+          {preview.is_operator && (
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              This is a platform operator&apos;s account. Remove its email from the server&apos;s operators before deleting it.
+            </p>
+          )}
+          <OrgList title="Need another owner first" tone="amber" orgs={preview.blocks}
+            note="You're the only owner. Make another member an owner under Organization → Members, or remove the other members." />
+          <OrgList title="Deleted with your account" tone="rose" orgs={preview.closes}
+            note="Nobody else belongs to these. Their tasks, workspaces, solutions, files, connections and saved keys are erased, and any paid plan stops renewing." />
+          <OrgList title="You'll leave" tone="zinc" orgs={preview.leaves}
+            note="The other members keep these organizations and everything in them, including work you did there." />
+
+          {preview.allowed && (
+            <form onSubmit={submit} className="flex max-w-sm flex-col gap-2">
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password"
+                autoComplete="current-password" className={field} />
+              <label className="flex flex-col gap-1 text-xs text-zinc-500">
+                <span>Type <span className="font-semibold text-zinc-700 dark:text-zinc-300">{CONFIRM}</span> to confirm</span>
+                <input value={typed} onChange={(e) => setTyped(e.target.value)} className={field} autoComplete="off" spellCheck={false} />
+              </label>
+              <div className="flex gap-2">
+                <button type="submit" disabled={busy || !password || typed.trim().toLowerCase() !== CONFIRM}
+                  className="rounded-lg bg-rose-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-rose-700 disabled:opacity-50">
+                  {busy ? "Deleting…" : "Delete my account"}
+                </button>
+                <button type="button" onClick={() => { setOpen(false); setPassword(""); setTyped(""); setError(null); }}
+                  className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
+                  Cancel
+                </button>
+              </div>
+              {error && <p className="text-xs text-rose-600">{error}</p>}
+            </form>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function OrgList({ title, tone, orgs, note }: { title: string; tone: "amber" | "rose" | "zinc"; orgs: DeletionOrg[]; note: string }) {
+  if (orgs.length === 0) return null;
+  const color = tone === "amber" ? "text-amber-700 dark:text-amber-400" : tone === "rose" ? "text-rose-700 dark:text-rose-400" : "text-zinc-700 dark:text-zinc-300";
+  return (
+    <div className="space-y-1">
+      <div className={`text-xs font-semibold ${color}`}>{title}</div>
+      <ul className="list-disc pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+        {orgs.map((o) => <li key={o.tenant_id}>{o.name}</li>)}
+      </ul>
+      <p className="text-xs text-zinc-500">{note}</p>
+    </div>
+  );
+}

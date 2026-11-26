@@ -1,0 +1,182 @@
+@page "/reportar"
+@model ReportarModel
+@{
+    var form = Model.Form;
+}
+@if (Model.Receipt is { } receipt)
+{
+    <h1>@T["done.heading"]</h1>
+    @if (receipt.ImmediateDanger && receipt.Contacts.Emergency.Count > 0)
+    {
+        <section class="emergency" role="alert">
+            <p><strong>@T["done.danger"]</strong></p>
+            <ul>
+                @foreach (var c in receipt.Contacts.Emergency)
+                {
+                    <li>@c.Label@(c.Phone is null ? "" : ": ") <strong>@c.Phone</strong></li>
+                }
+            </ul>
+        </section>
+    }
+    <h2>@T["done.code"]</h2>
+    <p class="code" data-testid="case-code">@receipt.CaseCode</p>
+    <h2>@T["done.passphrase"]</h2>
+    @if (receipt.GeneratedPassphrase is { } generated)
+    {
+        <p class="code" data-testid="passphrase">@generated</p>
+    }
+    else
+    {
+        <p>@T["done.passphrase.chosen"]</p>
+    }
+    <p class="notice">@T["done.save"]</p>
+    <p class="help">@T["done.print"]</p>
+    <h2>@T["done.next.heading"]</h2>
+    <ul>
+        <li>@T["done.next.1"]</li>
+        <li>@T["done.next.2"]</li>
+        @if (!string.IsNullOrWhiteSpace(receipt.ResponseTime))
+        {
+            <li><strong>@T["done.response"]:</strong> @receipt.ResponseTime</li>
+        }
+    </ul>
+    @if (receipt.Contacts.Support.Count > 0)
+    {
+        <h2>@T["done.support.heading"]</h2>
+        <ul>
+            @foreach (var c in receipt.Contacts.Support)
+            {
+                <li>@c.Label@(c.Phone is null ? "" : ": ")@c.Phone</li>
+            }
+        </ul>
+    }
+    <p class="no-print"><a class="button secondary" href="~/">@T["done.new"]</a></p>
+    return;
+}
+
+<h1>@T["form.heading"]</h1>
+
+@if (Model.Notice is { } notice)
+{
+    <p class="notice error" role="alert">@notice</p>
+}
+
+@if (form is null)
+{
+    <p><a href="~/">@T["home"]</a></p>
+    return;
+}
+
+@if (Model.Errors.Count > 0)
+{
+    <p class="notice error" role="alert">@T["form.errors"]</p>
+}
+
+<form method="post" action="~/reportar" novalidate>
+    @Html.AntiForgeryToken()
+    @if (Model.PersonalData.Count > 0)
+    {
+        <section class="notice" role="alert" aria-labelledby="datos">
+            <h2 id="datos">@T["pii.heading"]</h2>
+            <p>@T["pii.lead"]</p>
+            <ul>
+                @foreach (var type in Model.PersonalData)
+                {
+                    <li>@Testigo.Redaction.PersonalDataType.Describe(type, T.Language)</li>
+                }
+            </ul>
+            <p>@T["pii.choice"]</p>
+            <p><button class="button" type="submit" name="personal_data_ok" value="1">@T["pii.send"]</button></p>
+            <p class="help">@T["pii.edit"]</p>
+        </section>
+    }
+
+    @foreach (var field in form.Fields)
+    {
+        var name = "a." + field.Key;
+        var id = "f-" + field.Key;
+        var error = Model.Errors.GetValueOrDefault(field.Key);
+        var suffix = field.Required ? T["form.required"] : T["form.optional"];
+        switch (field.Kind)
+        {
+            case "longtext":
+            case "text":
+                <div class="field">
+                    <label for="@id">@field.Label <span class="help">@suffix</span></label>
+                    @if (field.Help is not null) { <p class="help" id="@(id)-help">@field.Help</p> }
+                    @if (error is not null) { <p class="field-error" id="@(id)-error">@error</p> }
+                    @if (field.Kind == "longtext")
+                    {
+                        <textarea id="@id" name="@name" maxlength="@field.MaxLength" aria-describedby="@(id)-help" aria-invalid="@(error is not null ? "true" : "false")">@Model.Value(field.Key)</textarea>
+                    }
+                    else
+                    {
+                        <input type="text" id="@id" name="@name" maxlength="@field.MaxLength" value="@Model.Value(field.Key)" aria-invalid="@(error is not null ? "true" : "false")">
+                    }
+                </div>
+                break;
+            case "multichoice":
+                <fieldset>
+                    <legend>@field.Label <span class="help">@suffix</span></legend>
+                    @if (field.Help is not null) { <p class="help">@field.Help</p> }
+                    @if (error is not null) { <p class="field-error">@error</p> }
+                    @foreach (var o in field.Options)
+                    {
+                        <label class="choice"><input type="checkbox" name="@name" value="@o.Key" checked="@Model.Has(field.Key, o.Key)"> <span>@o.Label</span></label>
+                    }
+                </fieldset>
+                break;
+            default:
+                <div class="field">
+                    <label for="@id">@field.Label <span class="help">@suffix</span></label>
+                    @if (field.OnlyWhen is not null) { <p class="help">@T["form.region.note"]</p> }
+                    @if (field.Help is not null) { <p class="help">@field.Help</p> }
+                    @if (error is not null) { <p class="field-error">@error</p> }
+                    <select id="@id" name="@name">
+                        <option value="">—</option>
+                        @foreach (var o in field.Options)
+                        {
+                            <option value="@o.Key" selected="@Model.Has(field.Key, o.Key)">@o.Label</option>
+                        }
+                    </select>
+                </div>
+                break;
+        }
+    }
+
+    <fieldset>
+        <legend>@T["form.contact.heading"]</legend>
+        <p class="help">@T["form.contact.help"]</p>
+        @foreach (var key in new[] { "contact_method", "contact_value" })
+        {
+            if (Model.Errors.GetValueOrDefault(key) is { } e) { <p class="field-error">@e</p> }
+        }
+        <p><strong>@T["form.contact.method"]</strong></p>
+        @foreach (var m in form.ContactMethods)
+        {
+            <label class="choice"><input type="radio" name="contact_method" value="@m.Key" checked="@(Model.ContactMethod == m.Key)"> <span>@m.Label</span></label>
+        }
+        <label for="contact_value">@T["form.contact.value"]</label>
+        <input type="text" id="contact_value" name="contact_value" maxlength="200" value="@Model.ContactValue" autocomplete="off">
+    </fieldset>
+
+    <fieldset>
+        <legend>@T["form.consents.heading"]</legend>
+        @foreach (var c in form.Consents)
+        {
+            if (Model.Errors.GetValueOrDefault("consent_" + c.Key) is { } e) { <p class="field-error">@e</p> }
+            <label class="choice"><input type="checkbox" name="consent" value="@c.Key" checked="@Model.Consents.Contains(c.Key)"> <span>@c.Label @(c.Required ? T["form.required"] : T["form.optional"])</span></label>
+        }
+        @if (Model.Errors.GetValueOrDefault("consents") is { } ce) { <p class="field-error">@ce</p> }
+    </fieldset>
+
+    <fieldset>
+        <legend>@T["form.passphrase.heading"]</legend>
+        <p class="help">@T["form.passphrase.help"].Replace("{min}", form.PassphraseMinLength.ToString())</p>
+        @if (Model.Errors.GetValueOrDefault("passphrase") is { } pe) { <p class="field-error">@pe</p> }
+        <label for="passphrase">@T["form.passphrase.label"]</label>
+        <input type="password" id="passphrase" name="passphrase" autocomplete="new-password" maxlength="200">
+    </fieldset>
+
+    <p><button class="button" type="submit">@T["form.submit"]</button></p>
+</form>

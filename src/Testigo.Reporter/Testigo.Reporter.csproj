@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Testigo.Reporter</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Only the domain library (for the personal-data warning, run here so the text isn't sent
+       anywhere before the reporter decides). No infrastructure, no third-party front-end code. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Testigo\Testigo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Texts/*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Testigo.Tests" />
+  </ItemGroup>
+
+</Project>

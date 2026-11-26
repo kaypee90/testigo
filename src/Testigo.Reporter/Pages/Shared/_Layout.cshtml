@@ -1,0 +1,51 @@
+@inject Microsoft.Extensions.Options.IOptions<ReporterOptions> Options
+@inject TextCatalog Catalog
+@{
+    // The switch is a plain link to the same page in another language. Only on pages opened with
+    // GET: after sending, following it would lose what the reporter wrote or their receipt.
+    var others = HttpMethods.IsGet(Context.Request.Method) ? Catalog.Languages.Where(l => l != T.Language).ToList() : [];
+}
+<!doctype html>
+<html lang="@T.Language">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+    <title>@T["site.title"]</title>
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/salir.js" defer></script>
+</head>
+<body>
+    @* The §12 banner is always shown in Spanish; other languages add their translation below it. *@
+    <div class="banner" role="note" data-testid="prototype-banner">
+        <span lang="es">@Catalog.Spanish["banner"]</span>
+        @if (T.Language != TextCatalog.Default)
+        {
+            <span class="banner-translation">@T["banner"]</span>
+        }
+    </div>
+    <div class="exit">
+        <a id="salir" class="exit-link" href="@Options.Value.QuickExitUrl" rel="noreferrer noopener" data-url="@Options.Value.QuickExitUrl">@T["exit"]</a>
+        <span class="exit-help">@T["exit.help"]</span>
+    </div>
+    <header class="brand">
+        <a class="brand-link" href="~/"><img src="/img/logo.svg" alt="" width="32" height="32"><span>Testigo</span></a>
+        @if (others.Count > 0)
+        {
+            <nav class="languages" aria-label="@T["language.nav"]" data-testid="language-switch">
+                @foreach (var l in others)
+                {
+                    <a href="@LanguageMiddleware.AddressIn(Context, l)" hreflang="@l" lang="@l">@Catalog.For(l)["language.name"]</a>
+                }
+            </nav>
+        }
+    </header>
+    <main class="page">
+        @RenderBody()
+    </main>
+    <footer class="footer">@T["footer"]</footer>
+</body>
+</html>

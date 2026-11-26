@@ -1,0 +1,25 @@
+# The public reporter app (NFR-SEC-7): its own origin, server-rendered, no third-party code.
+# It reads only the intake key from a read-only volume; it holds no case data and no master keys.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# The reporter's project references: Testigo, and the runtime contracts it uses (LLM interfaces).
+COPY src/AgentRuntime/AgentRuntime.csproj src/AgentRuntime/
+COPY src/Testigo/Testigo.csproj src/Testigo/
+COPY src/Testigo.Reporter/Testigo.Reporter.csproj src/Testigo.Reporter/
+RUN dotnet restore src/Testigo.Reporter/Testigo.Reporter.csproj
+
+COPY src/AgentRuntime/ src/AgentRuntime/
+COPY src/Testigo/ src/Testigo/
+COPY src/Testigo.Reporter/ src/Testigo.Reporter/
+RUN dotnet publish src/Testigo.Reporter/Testigo.Reporter.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+USER $APP_UID
+
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Testigo.Reporter.dll"]

@@ -1,0 +1,36 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/AgentRuntime/AgentRuntime.csproj src/AgentRuntime/
+COPY src/AgentRuntime.Infrastructure/AgentRuntime.Infrastructure.csproj src/AgentRuntime.Infrastructure/
+COPY src/AgentRuntime.Api/AgentRuntime.Api.csproj src/AgentRuntime.Api/
+COPY src/Testigo/Testigo.csproj src/Testigo/
+COPY src/Testigo.Infrastructure/Testigo.Infrastructure.csproj src/Testigo.Infrastructure/
+RUN dotnet restore src/AgentRuntime.Api/AgentRuntime.Api.csproj
+
+COPY src/AgentRuntime/ src/AgentRuntime/
+COPY src/AgentRuntime.Infrastructure/ src/AgentRuntime.Infrastructure/
+COPY src/AgentRuntime.Api/ src/AgentRuntime.Api/
+COPY src/Testigo/ src/Testigo/
+COPY src/Testigo.Infrastructure/ src/Testigo.Infrastructure/
+
+RUN dotnet publish src/AgentRuntime.Api/AgentRuntime.Api.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+COPY --from=build /app .
+# Volumes mounted here start out owned by this user, so the API can write its keys.
+# /app/intake holds only the reporter app's shared key; the master keys stay in /app/keys.
+RUN mkdir -p /app/keys /app/intake && chown -R $APP_UID /app/keys /app/intake
+USER $APP_UID
+
+# Which build this is, shown to operators in Platform admin -> Overview.
+ARG APP_VERSION=
+ARG APP_BUILT_AT=
+ENV App__Version=$APP_VERSION App__BuiltAt=$APP_BUILT_AT
+
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "AgentRuntime.Api.dll"]

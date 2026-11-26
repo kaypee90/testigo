@@ -1,0 +1,359 @@
+{
+ "version": "form-v1",
+ "language": "es",
+ "note": "Starting form for the Phase 0 prototype (FR-INT-1). VALIDATE: fields, wording and required fields to be co-designed with the deploying organization (NFR-UX-3, NFR-UX-4).",
+ "notice_version": "aviso-v1",
+ "fields": [
+  {
+   "key": "what_happened",
+   "kind": "longtext",
+   "required": true,
+   "max_length": 10000,
+   "label": "¿Qué pasó?",
+   "help": "Cuéntalo con tus palabras. Puedes escribir en cualquier idioma. No es necesario dar nombres ni datos que te identifiquen."
+  },
+  {
+   "key": "technology",
+   "kind": "multichoice",
+   "taxonomy": "technology",
+   "extra_options": [
+    {
+     "key": "dont_know",
+     "label": "No sé"
+    }
+   ],
+   "label": "¿Qué tecnología estuvo involucrada?",
+   "help": "Marca las que correspondan, o «No sé»."
+  },
+  {
+   "key": "when",
+   "kind": "choice",
+   "label": "¿Cuándo pasó, aproximadamente?",
+   "options": [
+    {
+     "key": "last_month",
+     "label": "En el último mes"
+    },
+    {
+     "key": "last_6_months",
+     "label": "En los últimos 6 meses"
+    },
+    {
+     "key": "last_year",
+     "label": "En el último año"
+    },
+    {
+     "key": "over_a_year",
+     "label": "Hace más de un año"
+    },
+    {
+     "key": "ongoing",
+     "label": "Sigue pasando"
+    },
+    {
+     "key": "dont_know",
+     "label": "No sé"
+    }
+   ]
+  },
+  {
+   "key": "country",
+   "kind": "choice",
+   "label": "¿En qué país?",
+   "default": "CL",
+   "options": [
+    {
+     "key": "CL",
+     "label": "Chile"
+    },
+    {
+     "key": "AR",
+     "label": "Argentina"
+    },
+    {
+     "key": "BR",
+     "label": "Brasil"
+    },
+    {
+     "key": "PE",
+     "label": "Perú"
+    },
+    {
+     "key": "BO",
+     "label": "Bolivia"
+    },
+    {
+     "key": "CO",
+     "label": "Colombia"
+    },
+    {
+     "key": "MX",
+     "label": "México"
+    },
+    {
+     "key": "other",
+     "label": "Otro país"
+    }
+   ]
+  },
+  {
+   "key": "region",
+   "kind": "choice",
+   "label": "¿En qué región?",
+   "help": "Solo la región: no pedimos comuna ni dirección.",
+   "only_when": {
+    "country": "CL"
+   },
+   "options": [
+    {
+     "key": "arica",
+     "label": "Arica y Parinacota"
+    },
+    {
+     "key": "tarapaca",
+     "label": "Tarapacá"
+    },
+    {
+     "key": "antofagasta",
+     "label": "Antofagasta"
+    },
+    {
+     "key": "atacama",
+     "label": "Atacama"
+    },
+    {
+     "key": "coquimbo",
+     "label": "Coquimbo"
+    },
+    {
+     "key": "valparaiso",
+     "label": "Valparaíso"
+    },
+    {
+     "key": "metropolitana",
+     "label": "Metropolitana de Santiago"
+    },
+    {
+     "key": "ohiggins",
+     "label": "Libertador General Bernardo O'Higgins"
+    },
+    {
+     "key": "maule",
+     "label": "Maule"
+    },
+    {
+     "key": "nuble",
+     "label": "Ñuble"
+    },
+    {
+     "key": "biobio",
+     "label": "Biobío"
+    },
+    {
+     "key": "araucania",
+     "label": "La Araucanía"
+    },
+    {
+     "key": "los_rios",
+     "label": "Los Ríos"
+    },
+    {
+     "key": "los_lagos",
+     "label": "Los Lagos"
+    },
+    {
+     "key": "aysen",
+     "label": "Aysén"
+    },
+    {
+     "key": "magallanes",
+     "label": "Magallanes y la Antártica Chilena"
+    },
+    {
+     "key": "prefer_not",
+     "label": "Prefiero no decir"
+    }
+   ]
+  },
+  {
+   "key": "affected",
+   "kind": "multichoice",
+   "taxonomy": "affected",
+   "label": "¿Quiénes fueron afectados?",
+   "help": "Opcional."
+  },
+  {
+   "key": "organization",
+   "kind": "text",
+   "max_length": 200,
+   "label": "¿Qué empresa u organismo estuvo involucrado?",
+   "help": "Opcional. Si no sabes, déjalo en blanco."
+  },
+  {
+   "key": "outcome",
+   "kind": "multichoice",
+   "label": "¿Qué te gustaría que pasara?",
+   "help": "Opcional.",
+   "options": [
+    {
+     "key": "stop",
+     "label": "Que se detenga"
+    },
+    {
+     "key": "delete_data",
+     "label": "Que borren mis datos"
+    },
+    {
+     "key": "redress",
+     "label": "Una reparación"
+    },
+    {
+     "key": "public",
+     "label": "Que se sepa públicamente"
+    },
+    {
+     "key": "legal_advice",
+     "label": "Orientación legal"
+    },
+    {
+     "key": "record_only",
+     "label": "Solo dejar registro"
+    },
+    {
+     "key": "other",
+     "label": "Otra cosa"
+    }
+   ]
+  }
+ ],
+ "consents": [
+  {
+   "key": "processing",
+   "required": true,
+   "label": "Leí la información de arriba y quiero enviar este reporte para que el equipo lo revise."
+  },
+  {
+   "key": "contact",
+   "required": false,
+   "label": "Acepto que me contacten por el medio que indique abajo."
+  },
+  {
+   "key": "publication",
+   "required": false,
+   "label": "Acepto que una versión anonimizada del caso se incluya en estadísticas públicas y en el conjunto de datos abierto."
+  }
+ ],
+ "contact_methods": [
+  {
+   "key": "email",
+   "label": "Correo electrónico"
+  },
+  {
+   "key": "phone",
+   "label": "Teléfono"
+  },
+  {
+   "key": "signal",
+   "label": "Signal"
+  }
+ ],
+ "translations": {
+  "en": {
+   "status": "draft: not yet reviewed by a person. FR-INT-8 requires a person to review it before real use (open question Q15).",
+   "notice_version": "aviso-v1-en",
+   "fields": {
+    "what_happened": {
+     "label": "What happened?",
+     "help": "Tell it in your own words. You can write in any language. You don't need to give names or details that identify you."
+    },
+    "technology": {
+     "label": "What technology was involved?",
+     "help": "Tick any that apply, or \"I don't know\"."
+    },
+    "when": {
+     "label": "Roughly when did it happen?"
+    },
+    "country": {
+     "label": "In which country?"
+    },
+    "region": {
+     "label": "In which region?",
+     "help": "Only the region: we don't ask for your town or address."
+    },
+    "affected": {
+     "label": "Who was affected?",
+     "help": "Optional."
+    },
+    "organization": {
+     "label": "Which company or public body was involved?",
+     "help": "Optional. If you don't know, leave it blank."
+    },
+    "outcome": {
+     "label": "What would you like to happen?",
+     "help": "Optional."
+    }
+   },
+   "options": {
+    "technology": {
+     "dont_know": "I don't know"
+    },
+    "when": {
+     "last_month": "In the last month",
+     "last_6_months": "In the last 6 months",
+     "last_year": "In the last year",
+     "over_a_year": "More than a year ago",
+     "ongoing": "It's still happening",
+     "dont_know": "I don't know"
+    },
+    "country": {
+     "CL": "Chile",
+     "AR": "Argentina",
+     "BR": "Brazil",
+     "PE": "Peru",
+     "BO": "Bolivia",
+     "CO": "Colombia",
+     "MX": "Mexico",
+     "other": "Another country"
+    },
+    "region": {
+     "arica": "Arica y Parinacota",
+     "tarapaca": "Tarapacá",
+     "antofagasta": "Antofagasta",
+     "atacama": "Atacama",
+     "coquimbo": "Coquimbo",
+     "valparaiso": "Valparaíso",
+     "metropolitana": "Santiago Metropolitan",
+     "ohiggins": "Libertador General Bernardo O'Higgins",
+     "maule": "Maule",
+     "nuble": "Ñuble",
+     "biobio": "Biobío",
+     "araucania": "La Araucanía",
+     "los_rios": "Los Ríos",
+     "los_lagos": "Los Lagos",
+     "aysen": "Aysén",
+     "magallanes": "Magallanes y la Antártica Chilena",
+     "prefer_not": "I'd rather not say"
+    },
+    "outcome": {
+     "stop": "That it stops",
+     "delete_data": "That my data is deleted",
+     "redress": "Some form of redress",
+     "public": "That it becomes publicly known",
+     "legal_advice": "Legal guidance",
+     "record_only": "Just to put it on record",
+     "other": "Something else"
+    }
+   },
+   "consents": {
+    "processing": "I have read the information above and want to send this report for the team to review.",
+    "contact": "I agree to be contacted through the method I give below.",
+    "publication": "I agree that an anonymized version of the case may be included in public statistics and in the open dataset."
+   },
+   "contact_methods": {
+    "email": "Email",
+    "phone": "Phone",
+    "signal": "Signal"
+   }
+  }
+ }
+}

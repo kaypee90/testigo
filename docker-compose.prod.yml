@@ -1,0 +1,71 @@
+# Production overlay for a single server (NFR-OPS-1), layered on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Caddy is the only service reachable from outside and terminates TLS (Let's Encrypt).
+# Needs STAFF_DOMAIN, API_DOMAIN and REPORTER_DOMAIN in the server's .env (see .env.example). Still to come
+# (NFR-OPS-2): encrypted, automated backups with a scripted restore test.
+
+services:
+  postgres:
+    restart: unless-stopped
+
+  api:
+    ports: !reset []
+    restart: unless-stopped
+    environment:
+      Cors__AllowedOrigins__0: "https://${STAFF_DOMAIN}"
+      Dashboard__BaseUrl: "https://${STAFF_DOMAIN}"
+      # Caddy terminates TLS, so believe its X-Forwarded-Proto/For (src/AgentRuntime.Api/Platform/ProxyHeaders.cs)
+      # and mark the session cookie Secure regardless.
+      ForwardedHeaders__Enabled: "true"
+      Auth__CookieSecure: always
+      # The base file falls back to the local admin / admin account when these are unset; here
+      # there is none unless .env names one (and the API refuses to start with a short password).
+      Auth__LocalAdmin__Username: ${LOCAL_ADMIN_USERNAME-}
+      Auth__LocalAdmin__Password: ${LOCAL_ADMIN_PASSWORD-}
+
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "https://${API_DOMAIN}"
+    ports: !reset []
+    restart: unless-stopped
+
+  reporter:
+    ports: !reset []
+    restart: unless-stopped
+    environment:
+      # Caddy's X-Forwarded-For, only for the per-client submission limit; never stored or logged.
+      Reporter__BehindProxy: "true"
+
+  # Only runs with COMPOSE_PROFILES=ollama in .env; the API reaches it at http://ollama:11434.
+  ollama:
+    restart: unless-stopped
+    environment:
+      # Keep the model loaded between agent steps instead of reloading it after 5 idle minutes.
+      OLLAMA_KEEP_ALIVE: 24h
+      OLLAMA_NUM_PARALLEL: "1"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - web
+      - api
+      - reporter
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      STAFF_DOMAIN: ${STAFF_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      REPORTER_DOMAIN: ${REPORTER_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and ACME account; keep across deploys to avoid Let's Encrypt rate limits.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,24 @@
+# Reverse proxy for docker-compose.prod.yml. Caddy obtains and renews certificates for these
+# hosts automatically; their DNS records must point at the server before the first start.
+# The reporter app has its own origin (NFR-SEC-7).
+
+{$STAFF_DOMAIN} {
+	header X-Robots-Tag "noindex, nofollow"
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy web:3000
+}
+
+# The API, including the /ws/events SSE stream (Caddy flushes text/event-stream immediately).
+{$API_DOMAIN} {
+	header X-Robots-Tag "noindex, nofollow"
+	header Strict-Transport-Security "max-age=31536000"
+	# The intake endpoints are for the reporter app on the internal network only.
+	respond /api/intake* 404
+	reverse_proxy api:8080
+}
+
+# The public report form. Caddy writes no access log unless told to (NFR-SEC-3): keep it that way.
+{$REPORTER_DOMAIN} {
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy reporter:8080
+}

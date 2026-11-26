@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AgentRuntime.Api/AgentRuntime.Api.csproj" />
+    <Project Path="src/Testigo.Evals/Testigo.Evals.csproj" />
+    <Project Path="src/AgentRuntime.Infrastructure/AgentRuntime.Infrastructure.csproj" />
+    <Project Path="src/AgentRuntime.IntegrationTests/AgentRuntime.IntegrationTests.csproj" />
+    <Project Path="src/AgentRuntime.Tests/AgentRuntime.Tests.csproj" />
+    <Project Path="src/AgentRuntime/AgentRuntime.csproj" />
+    <Project Path="src/Testigo/Testigo.csproj" />
+    <Project Path="src/Testigo.Infrastructure/Testigo.Infrastructure.csproj" />
+    <Project Path="src/Testigo.Reporter/Testigo.Reporter.csproj" />
+    <Project Path="src/Testigo.Tests/Testigo.Tests.csproj" />
+  </Folder>
+</Solution>

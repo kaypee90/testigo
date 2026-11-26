@@ -1,0 +1,34 @@
+@page
+@model IndexModel
+<h1>@T["intro.heading"]</h1>
+<p>@T["intro.lead"]</p>
+
+@if (Model.Emergency.Count > 0)
+{
+    <section class="emergency" aria-labelledby="emergencia">
+        <h2 id="emergencia">@T["emergency.heading"]</h2>
+        <ul>
+            @foreach (var c in Model.Emergency)
+            {
+                <li>@c.Label@(c.Phone is null ? "" : ": ") <strong>@c.Phone</strong></li>
+            }
+        </ul>
+    </section>
+}
+
+<h2>@T["intro.what.heading"]</h2>
+<ul>
+    <li>@T["intro.what.1"]</li>
+    <li>@T["intro.what.2"]</li>
+    <li>@T["intro.what.3"].Replace("{ai}", Model.AiDescription)</li>
+    <li>@T["intro.what.4"]</li>
+</ul>
+
+<h2>@T["intro.risks.heading"]</h2>
+<ul>
+    <li>@T["intro.risks.1"]</li>
+    <li>@T["intro.risks.2"]</li>
+    <li>@T["intro.risks.3"]</li>
+</ul>
+
+<p><a class="button" href="~/reportar">@T["intro.start"]</a></p>

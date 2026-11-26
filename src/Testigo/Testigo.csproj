@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Testigo</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AgentRuntime\AgentRuntime.csproj" />
+  </ItemGroup>
+
+  <!-- Taxonomy, form, support contacts and word lists are data, not code (requirements section 4,
+       FR-ADM-2, FR-ADM-6). They ship embedded as the starting version; deployments may override
+       each with a file path in configuration. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Data/*.json" />
+    <EmbeddedResource Include="Data/*.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Testigo.Tests" />
+  </ItemGroup>
+
+</Project>

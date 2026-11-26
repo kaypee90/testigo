@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+# The staff dashboard. No analytics, error reporting or web fonts are built in (NFR-SEC-2).
+FROM node:22-slim AS deps
+WORKDIR /app
+COPY src/web/package.json src/web/package-lock.json ./
+# The npm cache is kept between builds and fetches are retried, so a dropped connection costs a
+# retry of one package rather than the whole install.
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
+
+FROM node:22-slim AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=deps /app/node_modules ./node_modules
+COPY src/web/ ./
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:5180
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+# The commit this dashboard was built from, compared with the server's in Platform admin.
+ARG NEXT_PUBLIC_APP_VERSION=
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+RUN npm run build
+# public/ may be empty, and git doesn't keep an empty folder: the runtime stage copies it either way.
+RUN mkdir -p public
+
+FROM node:22-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
+USER node
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+CMD ["node", "server.js"]

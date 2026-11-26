@@ -1,0 +1,132 @@
+# Testigo, Phase 0 demo (requirements §12): synthetic data only.
+#   cp .env.example .env    # optional: every value has a safe demo default
+#   docker compose up --build
+# Report form: http://localhost:3102. Staff dashboard: http://localhost:3101 (admin / admin in
+# this demo). API: http://localhost:5180.
+# Host ports are configurable (TESTIGO_*_PORT) and bound to 127.0.0.1 only. Postgres isn't
+# published at all.
+
+services:
+  postgres:
+    # Postgres 16 with pgvector, kept for the related-report search planned in FR-ANA-5.
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-testigo}
+      POSTGRES_USER: ${POSTGRES_USER:-testigo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-testigo_dev_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-testigo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${TESTIGO_API_PORT:-5180}:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-testigo};Username=${POSTGRES_USER:-testigo};Password=${POSTGRES_PASSWORD:-testigo_dev_password}"
+      # Mock is deterministic and needs no key. Ollama runs a local model; for hosted providers see
+      # docs/llm-settings.md (redacted report text then leaves the server: docs/data-protection.md).
+      Llm__Provider: ${LLM_PROVIDER:-Mock}
+      Llm__Model: ${LLM_MODEL:-mock}
+      Llm__ApiKey: ${LLM_API_KEY:-}
+      # Ollama: blank means the Docker host (http://host.docker.internal:11434); use
+      # http://ollama:11434 with the bundled `ollama` profile below.
+      Llm__BaseUrl: ${LLM_BASE_URL:-}
+      Llm__ContextLength: ${LLM_CONTEXT_LENGTH:-16384}
+      Llm__TimeoutSeconds: ${LLM_TIMEOUT_SECONDS:-300}
+      Llm__DisableThinking: ${LLM_DISABLE_THINKING:-true}
+      Dashboard__BaseUrl: ${STAFF_BASE_URL:-http://localhost:3101}
+      # This key encrypts staff two-factor secrets: set SECRETS_MASTER_KEY (openssl rand -base64 32)
+      # outside a demo; otherwise one is generated into the api-keys volume on first start.
+      Secrets__MasterKey: ${SECRETS_MASTER_KEY:-}
+      Secrets__KeyFile: /app/keys/secrets-master.key
+      Cors__AllowedOrigins__0: ${STAFF_BASE_URL:-http://localhost:3101}
+      Auth__Mode: accounts
+      # Staff accounts are created by invitation, never by sign-up.
+      Auth__AllowSignup: "false"
+      Auth__EmailVerification: ${AUTH_EMAIL_VERIFICATION:-auto}
+      Auth__SetupToken: ${SETUP_TOKEN:-}
+      Auth__PlatformAdmins__0: ${PLATFORM_ADMIN_EMAIL:-}
+      # The server's own mail (staff invitations); empty host = links to copy instead.
+      Email__Smtp__Host: ${EMAIL_SMTP_HOST:-}
+      Email__Smtp__Port: ${EMAIL_SMTP_PORT:-587}
+      Email__Smtp__Tls: ${EMAIL_SMTP_TLS:-starttls}
+      Email__Smtp__Username: ${EMAIL_SMTP_USERNAME:-}
+      Email__Smtp__Password: ${EMAIL_SMTP_PASSWORD:-}
+      Email__Smtp__From: ${EMAIL_FROM:-}
+      # A built-in sign-in for the local demo; set LOCAL_ADMIN_USERNAME= (empty) to turn it off.
+      Auth__LocalAdmin__Username: ${LOCAL_ADMIN_USERNAME-admin}
+      Auth__LocalAdmin__Password: ${LOCAL_ADMIN_PASSWORD-admin}
+      # Testigo (requirements §12). The master keys live in their own volume, never in the
+      # database; outside a demo, mount them as a secret and set GenerateIfMissing to false.
+      Testigo__Keys__KeyFile: /app/keys/testigo-keys.json
+      Testigo__Keys__GenerateIfMissing: "true"
+      Testigo__Intake__SharedKeyFile: /app/intake/intake.key
+      Testigo__Intake__GenerateSharedKeyIfMissing: "true"
+      # Two-factor sign-in for staff (NFR-SEC-8). The admin turns it on under Settings first.
+      Testigo__Staff__RequireTwoFactor: ${TESTIGO_REQUIRE_2FA:-true}
+      # Synthetic demo reports, and the Analyst and Reviewer roles for the local admin.
+      Testigo__Demo__Seed: ${TESTIGO_DEMO_SEED:-true}
+      Testigo__Demo__GrantLocalAdminRoles: ${TESTIGO_DEMO_ROLES:-true}
+    # Makes host.docker.internal resolve on Linux too, so the API can reach Ollama on the host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - api-keys:/app/keys
+      - intake-key:/app/intake
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:-http://localhost:5180}
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${TESTIGO_STAFF_PORT:-3101}:3000"
+
+  # The public report form (FR-INT-1), on its own origin (NFR-SEC-7). It talks to the API's intake
+  # endpoints on the internal network with the shared key, and to nothing else.
+  reporter:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.reporter
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${TESTIGO_REPORTER_PORT:-3102}:8080"
+    environment:
+      Reporter__ApiBaseUrl: http://api:8080
+      Reporter__IntakeKeyFile: /intake/intake.key
+      # Where the quick-exit control goes (FR-INT-5); VALIDATE with the deploying organization.
+      Reporter__QuickExitUrl: ${TESTIGO_QUICK_EXIT_URL:-https://www.google.com/search?q=pron%C3%B3stico+del+tiempo}
+    volumes:
+      - intake-key:/intake:ro
+
+  # Optional bundled Ollama (CPU unless your Docker has GPU support):
+  #   docker compose --profile ollama up -d --build
+  # with LLM_PROVIDER=Ollama, LLM_BASE_URL=http://ollama:11434 and LLM_MODEL in .env, then
+  #   docker compose exec ollama ollama pull qwen3:4b-instruct
+  # Not published: it has no authentication.
+  ollama:
+    image: ollama/ollama
+    profiles: ["ollama"]
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  postgres-data:
+  api-keys:
+  # Shared with the reporter app, read-only there: the intake key and nothing else.
+  intake-key:
+  ollama-data:

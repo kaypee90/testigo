@@ -1,0 +1,65 @@
+{
+ "version": "danger-v1",
+ "note": "Immediate-danger keyword rules (FR-ANA-6). They run on every report alongside the model check, and either one raises the flag. Matching ignores case and accents. VALIDATE with the deploying organization and a support professional.",
+ "rules": [
+  {
+   "key": "self_harm",
+   "label": "Riesgo de autolesión o suicidio",
+   "patterns": [
+    "\\bquiero morir(me)?\\b",
+    "\\bme quiero morir\\b",
+    "\\bquitarme la vida\\b",
+    "\\bsuicid",
+    "\\bno quiero (seguir )?vivir\\b",
+    "\\bmatarme\\b",
+    "\\bhacerme dano\\b",
+    "\\bno aguanto mas\\b.*\\b(vivir|vida)\\b",
+    "\\bterminar con (todo|mi vida)\\b",
+    "\\bquero morrer\\b",
+    "\\bme matar\\b",
+    "\\btirar minha (propria )?vida\\b"
+   ]
+  },
+  {
+   "key": "threat",
+   "label": "Amenaza a la vida o la integridad",
+   "patterns": [
+    "\\bme van a matar\\b",
+    "\\bnos van a matar\\b",
+    "\\bamenaz\\w* (de muerte|con matar)",
+    "\\bamenaza de muerte\\b",
+    "\\bmatar(me|nos|la|lo)\\b",
+    "\\bse donde vives\\b",
+    "\\bsabe donde vivo\\b",
+    "\\bme (estan )?sigui(endo|o)\\b",
+    "\\bme persigue\\b",
+    "\\btengo miedo (de|por) mi vida\\b",
+    "\\bvao me matar\\b",
+    "\\bameaca de morte\\b",
+    "\\bameacad[oa] de morte\\b"
+   ]
+  },
+  {
+   "key": "violence",
+   "label": "Violencia física o sexual",
+   "patterns": [
+    "\\bme golpe\\w*\\b",
+    "\\bme peg(o|aron)\\b",
+    "\\babuso sexual\\b",
+    "\\bviolacion\\b",
+    "\\bme violo\\b",
+    "\\bagresion fisica\\b",
+    "\\bviolencia (fisica|sexual|intrafamiliar)\\b",
+    "\\bme bateu\\b",
+    "\\bestupro\\b"
+   ]
+  },
+  {
+   "key": "child_at_risk",
+   "label": "Niño, niña o adolescente en riesgo",
+   "patterns": [
+    "\\b(nino|nina|menor|hij[oa]|adolescente)\\b.{0,40}\\b(en peligro|en riesgo|abusad[oa]|amenazad[oa])\\b"
+   ]
+  }
+ ]
+}

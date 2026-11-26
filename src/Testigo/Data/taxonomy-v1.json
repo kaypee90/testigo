@@ -1,0 +1,720 @@
+{
+ "version": "v1",
+ "status": "starter",
+ "note": "Starting taxonomy for the Phase 0 prototype (requirements §4). VALIDATE: to be co-designed with the deploying organization. Tracker mappings (§4.2) are empty until the trackers' current schemas are confirmed.",
+ "trackers": [
+  "aiid",
+  "oecd_aim",
+  "aiaaic"
+ ],
+ "dimensions": [
+  {
+   "key": "technology",
+   "labels": {
+    "es": "Tecnología involucrada",
+    "en": "Technology involved",
+    "pt": "Tecnologia envolvida"
+   },
+   "multiple": true,
+   "terms": [
+    {
+     "key": "neuro_consumer_eeg",
+     "labels": {
+      "es": "EEG de consumo o dispositivo usable",
+      "en": "Consumer EEG or wearable",
+      "pt": "EEG de consumo ou vestível"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "neuro_bci",
+     "labels": {
+      "es": "Interfaz cerebro-computador",
+      "en": "Brain-computer interface",
+      "pt": "Interface cérebro-computador"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "neuro_stimulation",
+     "labels": {
+      "es": "Neuroestimulación",
+      "en": "Neurostimulation",
+      "pt": "Neuroestimulação"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "neuro_data_app",
+     "labels": {
+      "es": "Aplicación de datos neuronales",
+      "en": "Neural-data app",
+      "pt": "Aplicativo de dados neurais"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_emotion_recognition",
+     "labels": {
+      "es": "Reconocimiento de emociones",
+      "en": "Emotion recognition",
+      "pt": "Reconhecimento de emoções"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_biometric_recognition",
+     "labels": {
+      "es": "Reconocimiento facial o biométrico",
+      "en": "Facial or biometric recognition",
+      "pt": "Reconhecimento facial ou biométrico"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_automated_decision",
+     "labels": {
+      "es": "Decisión automatizada (crédito, beneficios, empleo, policía, salud)",
+      "en": "Automated decision (credit, welfare, hiring, policing, health)",
+      "pt": "Decisão automatizada (crédito, benefícios, emprego, polícia, saúde)"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_generative",
+     "labels": {
+      "es": "IA generativa (deepfakes, imágenes íntimas no consentidas)",
+      "en": "Generative AI (deepfakes, non-consensual intimate images)",
+      "pt": "IA generativa (deepfakes, imagens íntimas não consentidas)"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_recommender",
+     "labels": {
+      "es": "Sistemas de recomendación y contenido",
+      "en": "Recommender and content systems",
+      "pt": "Sistemas de recomendação e conteúdo"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_workplace_monitoring",
+     "labels": {
+      "es": "Monitoreo en el trabajo",
+      "en": "Workplace monitoring",
+      "pt": "Monitoramento no trabalho"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "ai_chatbot_agent",
+     "labels": {
+      "es": "Chatbots y agentes",
+      "en": "Chatbots and agents",
+      "pt": "Chatbots e agentes"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "other",
+     "labels": {
+      "es": "Otra",
+      "en": "Other",
+      "pt": "Outra"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    }
+   ]
+  },
+  {
+   "key": "harm_type",
+   "labels": {
+    "es": "Tipo de daño",
+    "en": "Harm type",
+    "pt": "Tipo de dano"
+   },
+   "multiple": true,
+   "terms": [
+    {
+     "key": "data_collection_without_consent",
+     "labels": {
+      "es": "Recolección de datos neuronales o biométricos sin consentimiento",
+      "en": "Collection of neural or biometric data without consent",
+      "pt": "Coleta de dados neurais ou biométricos sem consentimento"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "data_reuse_or_sale",
+     "labels": {
+      "es": "Reutilización o venta de esos datos",
+      "en": "Re-use or sale of that data",
+      "pt": "Reutilização ou venda desses dados"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "surveillance",
+     "labels": {
+      "es": "Vigilancia",
+      "en": "Surveillance",
+      "pt": "Vigilância"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "discrimination",
+     "labels": {
+      "es": "Discriminación",
+      "en": "Discrimination",
+      "pt": "Discriminação"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "wrongful_automated_decision",
+     "labels": {
+      "es": "Decisión automatizada injusta o errónea",
+      "en": "Wrongful automated decision",
+      "pt": "Decisão automatizada injusta ou errada"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "manipulation",
+     "labels": {
+      "es": "Manipulación",
+      "en": "Manipulation",
+      "pt": "Manipulação"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "psychological_harm",
+     "labels": {
+      "es": "Daño psicológico",
+      "en": "Psychological harm",
+      "pt": "Dano psicológico"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "reputational_harm",
+     "labels": {
+      "es": "Daño a la reputación",
+      "en": "Reputational harm",
+      "pt": "Dano à reputação"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "financial_harm",
+     "labels": {
+      "es": "Daño económico",
+      "en": "Financial harm",
+      "pt": "Dano financeiro"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "loss_of_service",
+     "labels": {
+      "es": "Pérdida de acceso a un servicio",
+      "en": "Loss of access to a service",
+      "pt": "Perda de acesso a um serviço"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "physical_harm",
+     "labels": {
+      "es": "Daño físico",
+      "en": "Physical harm",
+      "pt": "Dano físico"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "other",
+     "labels": {
+      "es": "Otro",
+      "en": "Other",
+      "pt": "Outro"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    }
+   ]
+  },
+  {
+   "key": "rights",
+   "labels": {
+    "es": "Derechos afectados",
+    "en": "Rights affected",
+    "pt": "Direitos afetados"
+   },
+   "multiple": true,
+   "validate": "Align with the categories human rights organizations use in litigation and standards work.",
+   "terms": [
+    {
+     "key": "privacy",
+     "labels": {
+      "es": "Privacidad y protección de datos",
+      "en": "Privacy and data protection",
+      "pt": "Privacidade e proteção de dados"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "mental_integrity",
+     "labels": {
+      "es": "Integridad mental y neuroderechos",
+      "en": "Mental integrity and neural rights",
+      "pt": "Integridade mental e neurodireitos"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "non_discrimination",
+     "labels": {
+      "es": "No discriminación",
+      "en": "Non-discrimination",
+      "pt": "Não discriminação"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "due_process",
+     "labels": {
+      "es": "Debido proceso",
+      "en": "Due process",
+      "pt": "Devido processo"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "expression",
+     "labels": {
+      "es": "Libertad de expresión",
+      "en": "Freedom of expression",
+      "pt": "Liberdade de expressão"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "health",
+     "labels": {
+      "es": "Salud",
+      "en": "Health",
+      "pt": "Saúde"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "work",
+     "labels": {
+      "es": "Trabajo",
+      "en": "Work",
+      "pt": "Trabalho"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "other",
+     "labels": {
+      "es": "Otro",
+      "en": "Other",
+      "pt": "Outro"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    }
+   ]
+  },
+  {
+   "key": "affected",
+   "labels": {
+    "es": "Quiénes fueron afectados",
+    "en": "Who was affected",
+    "pt": "Quem foi afetado"
+   },
+   "multiple": true,
+   "optional": true,
+   "note": "Optional, because it can identify people.",
+   "terms": [
+    {
+     "key": "individual",
+     "labels": {
+      "es": "Una persona",
+      "en": "An individual",
+      "pt": "Uma pessoa"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "group",
+     "labels": {
+      "es": "Un grupo o comunidad",
+      "en": "A group or community",
+      "pt": "Um grupo ou comunidade"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "children",
+     "labels": {
+      "es": "Niños, niñas y adolescentes",
+      "en": "Children and adolescents",
+      "pt": "Crianças e adolescentes"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "workers",
+     "labels": {
+      "es": "Trabajadores",
+      "en": "Workers",
+      "pt": "Trabalhadores"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "patients",
+     "labels": {
+      "es": "Pacientes",
+      "en": "Patients",
+      "pt": "Pacientes"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "indigenous",
+     "labels": {
+      "es": "Pueblos indígenas",
+      "en": "Indigenous peoples",
+      "pt": "Povos indígenas"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "migrants",
+     "labels": {
+      "es": "Personas migrantes",
+      "en": "Migrants",
+      "pt": "Migrantes"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "other",
+     "labels": {
+      "es": "Otro",
+      "en": "Other",
+      "pt": "Outro"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    }
+   ]
+  },
+  {
+   "key": "actor_type",
+   "labels": {
+    "es": "Actor",
+    "en": "Actor",
+    "pt": "Ator"
+   },
+   "multiple": false,
+   "terms": [
+    {
+     "key": "company",
+     "labels": {
+      "es": "Empresa",
+      "en": "Company",
+      "pt": "Empresa"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "government",
+     "labels": {
+      "es": "Organismo público",
+      "en": "Government body",
+      "pt": "Órgão público"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "health_provider",
+     "labels": {
+      "es": "Prestador de salud",
+      "en": "Health provider",
+      "pt": "Prestador de saúde"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "employer",
+     "labels": {
+      "es": "Empleador",
+      "en": "Employer",
+      "pt": "Empregador"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "school",
+     "labels": {
+      "es": "Establecimiento educacional",
+      "en": "School",
+      "pt": "Escola"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    },
+    {
+     "key": "unknown",
+     "labels": {
+      "es": "Desconocido",
+      "en": "Unknown",
+      "pt": "Desconhecido"
+     },
+     "description": {},
+     "mappings": {
+      "aiid": null,
+      "oecd_aim": null,
+      "aiaaic": null
+     }
+    }
+   ]
+  }
+ ],
+ "severity": [
+  "low",
+  "medium",
+  "high",
+  "critical"
+ ]
+}

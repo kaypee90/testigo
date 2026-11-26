@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* Dark mode follows a class on <html> ("dark"), set before first paint from the user's choice
+   (light / dark / system; see ThemeScript). System is the default, so the OS setting still rules. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Testigo's colours: white and a clear blue by day, deep navy by night. Every pair used for text
+   meets WCAG AA contrast (4.5:1) in both themes; check new ones before adding them. */
+:root {
+  --background: #ffffff;
+  --foreground: #132036;
+}
+
+.dark {
+  --background: #0b1120;
+  --foreground: #e7ecf4;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Brand blue: primary actions, links, focus rings and the active menu item. White text on 500
+     and darker passes AA. */
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-200: #bfd5fe;
+  --color-brand-300: #93b8fd;
+  --color-brand-400: #5a95fa;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1f52c9;
+  --color-brand-700: #1c44a6;
+  --color-brand-800: #1c3b85;
+  --color-brand-900: #1b336b;
+  --color-brand-950: #111f43;
+
+  /* The neutrals (Tailwind's zinc names, so components need no new classes) lean blue: blue-white
+     surfaces in the light theme and navy ones in the dark. */
+  --color-zinc-50: #f6f8fc;
+  --color-zinc-100: #edf1f8;
+  --color-zinc-200: #dde4ef;
+  --color-zinc-300: #c3cede;
+  --color-zinc-400: #94a2b8;
+  --color-zinc-500: #66758c;
+  --color-zinc-600: #4a586e;
+  --color-zinc-700: #364257;
+  --color-zinc-800: #222d40;
+  --color-zinc-900: #151d2e;
+  --color-zinc-950: #0b1120;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* A visible focus ring for keyboard users on every control. In the base layer, so any Tailwind
+   utility (e.g. Button's focus-visible:outline-none ring-2) still wins: unlayered rules would beat
+   every layered one. The outline follows each control's own corners. Mouse clicks don't show it. */
+@layer base {
+  :where(button, a[href], summary, [role="tab"], [role="button"], input[type="checkbox"], input[type="radio"]):focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+  .dark :where(button, a[href], summary, [role="tab"], [role="button"], input[type="checkbox"], input[type="radio"]):focus-visible {
+    outline-color: var(--color-brand-400);
+  }
+}
+
+/* Native dropdown lists take their colours from the select; some browsers (Chrome and Edge on
+   Windows) draw them white whenever the select's own background is transparent. */
+.dark select option { background-color: var(--color-zinc-900); color: var(--color-zinc-50); }
+
+/* Quieter scrollbars in the dark theme. */
+.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: var(--color-zinc-800); border-radius: 9999px; border: 2px solid var(--color-zinc-950); }
+.dark ::-webkit-scrollbar-track { background: transparent; }
+
+/* Printing a case: no app chrome, the page's own height, ink-friendly. */
+@media print {
+  html, body { height: auto !important; background: white !important; }
+  [data-print="hide"] { display: none !important; }
+  [data-print="avoid-break"] { break-inside: avoid; }
+}
