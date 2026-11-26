@@ -1,10 +1,10 @@
 /* Testigo reporter: system fonts only, no external resources (NFR-SEC-2). Mobile first.
    White and blue by default; deep navy when the device asks for dark mode (no JavaScript needed).
-   Every text colour meets WCAG AA contrast (4.5:1) against its background in both themes. */
+   Text/background pairs target AAA contrast (7:1, NFR-UX-1); this is not a WCAG conformance claim. */
 :root {
   color-scheme: light dark;
-  --bg: #f6f8fc; --surface: #ffffff; --ink: #132036; --muted: #4a586e; --line: #c3cede; --field-line: #66758c;
-  --accent: #2563eb; --accent-strong: #1f52c9; --accent-ink: #ffffff; --accent-soft: #eff5ff;
+  --bg: #f6f8fc; --surface: #ffffff; --ink: #132036; --muted: #3e4a5e; --line: #c3cede; --field-line: #66758c;
+  --accent: #1e40af; --accent-strong: #1e3a8a; --accent-ink: #ffffff; --accent-soft: #eff5ff;
   --banner-bg: #111f43; --banner-ink: #ffffff; --banner-line: #f5b840;
   --exit-bg: #edf1f8;
   --warn-bg: #fff4d6; --warn-line: #c9952b; --warn-ink: #132036;
@@ -13,11 +13,11 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0b1120; --surface: #151d2e; --ink: #e7ecf4; --muted: #a9b5c8; --line: #364257; --field-line: #66758c;
-    --accent: #7aa8ff; --accent-strong: #93b8fd; --accent-ink: #0b1120; --accent-soft: #111f43;
+    --accent: #a8c8ff; --accent-strong: #bdd6ff; --accent-ink: #0b1120; --accent-soft: #111f43;
     --banner-bg: #1b336b; --banner-ink: #ffffff; --banner-line: #f5b840;
     --exit-bg: #151d2e;
     --warn-bg: #3a2a05; --warn-line: #c9952b; --warn-ink: #fdeccb;
-    --err: #c4282d; --err-bg: #3b0d10; --err-ink: #ff9b9b;
+    --err: #a4161a; --err-bg: #3b0d10; --err-ink: #ff9b9b;
   }
 }
 * { box-sizing: border-box; }
@@ -60,7 +60,7 @@ textarea { min-height: 12rem; }
 .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.5rem; letter-spacing: .05em; background: var(--surface); border: 2px dashed var(--ink); padding: .6rem; word-break: break-all; }
 .footer { color: var(--muted); font-size: .85rem; text-align: center; padding: 2rem 1rem; }
 @media print {
-  :root { color-scheme: light; --bg: #fff; --surface: #fff; --ink: #000; --muted: #333; }
+  :root { color-scheme: light; --bg: #fff; --surface: #fff; --ink: #000; --muted: #333; --accent: #1e40af; --warn-bg: #fff4d6; --warn-ink: #132036; --err-bg: #fde8e8; --err-ink: #a4161a; }
   .exit, .footer, .no-print { display: none; }
   .banner { color: #000; background: #fff; border: 1px solid #000; }
 }

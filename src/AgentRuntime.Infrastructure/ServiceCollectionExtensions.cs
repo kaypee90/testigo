@@ -44,7 +44,7 @@ public static class ServiceCollectionExtensions
     public static void AddLlmProvider(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<LlmOptions>(configuration.GetSection(LlmOptions.SectionName));
-        var providerName = configuration[$"{LlmOptions.SectionName}:Provider"] ?? "Mock";
+        var providerName = LlmOptions.CanonicalProvider(configuration[$"{LlmOptions.SectionName}:Provider"]);
         // appsettings.json ships "BaseUrl": "" as a placeholder: blank means unset.
         var configuredBaseUrl = LlmOptions.NormalizeBaseUrl(providerName, configuration[$"{LlmOptions.SectionName}:BaseUrl"]);
         var timeout = TimeSpan.FromSeconds(Math.Max(30, configuration.GetValue($"{LlmOptions.SectionName}:TimeoutSeconds", 300)));
@@ -54,15 +54,18 @@ public static class ServiceCollectionExtensions
         switch (providerName)
         {
             case "Anthropic":
-                services.AddHttpClient<AnthropicProvider>(c => { c.BaseAddress = BaseAddress("https://api.anthropic.com"); c.Timeout = timeout; });
+                services.AddHttpClient<AnthropicProvider>(c => { c.BaseAddress = BaseAddress("https://api.anthropic.com"); c.Timeout = timeout; })
+                    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = !configuration.GetValue<bool>("Testigo:LocalModelsOnly") });
                 services.AddSingleton<ILLMProvider>(sp => sp.GetRequiredService<AnthropicProvider>());
                 break;
             case "OpenAI":
-                services.AddHttpClient<OpenAIProvider>(c => { c.BaseAddress = BaseAddress("https://api.openai.com"); c.Timeout = timeout; });
+                services.AddHttpClient<OpenAIProvider>(c => { c.BaseAddress = BaseAddress("https://api.openai.com"); c.Timeout = timeout; })
+                    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = !configuration.GetValue<bool>("Testigo:LocalModelsOnly") });
                 services.AddSingleton<ILLMProvider>(sp => sp.GetRequiredService<OpenAIProvider>());
                 break;
             case "Gemini":
-                services.AddHttpClient<GeminiProvider>(c => { c.BaseAddress = BaseAddress("https://generativelanguage.googleapis.com"); c.Timeout = timeout; });
+                services.AddHttpClient<GeminiProvider>(c => { c.BaseAddress = BaseAddress("https://generativelanguage.googleapis.com"); c.Timeout = timeout; })
+                    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = !configuration.GetValue<bool>("Testigo:LocalModelsOnly") });
                 services.AddSingleton<ILLMProvider>(sp => sp.GetRequiredService<GeminiProvider>());
                 break;
             case "Ollama":
@@ -71,6 +74,9 @@ public static class ServiceCollectionExtensions
                     var inContainer = string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase);
                     c.BaseAddress = BaseAddress(inContainer ? "http://host.docker.internal:11434" : "http://localhost:11434");
                     c.Timeout = timeout;
+                }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    AllowAutoRedirect = !configuration.GetValue<bool>("Testigo:LocalModelsOnly"),
                 });
                 services.AddSingleton<ILLMProvider>(sp => sp.GetRequiredService<OllamaProvider>());
                 break;

@@ -12,7 +12,7 @@ namespace AgentRuntime.IntegrationTests;
 /// token (Auth:SetupToken), whatever the sign-up setting; nobody who merely finds a new server
 /// first can claim it. Once an account exists the token is never asked for again.
 /// </summary>
-public sealed class SetupTokenTests(ITestOutputHelper output)
+public sealed class SetupTokenTests
 {
     private const string Password = "a-long-enough-password";
 
@@ -26,12 +26,6 @@ public sealed class SetupTokenTests(ITestOutputHelper output)
         await host.InitializeAsync();
         try
         {
-            if (host.Unavailable is not null)
-            {
-                output.WriteLine("SKIPPED: " + host.Unavailable);
-                return;
-            }
-
             using var client = host.Factory.CreateClient();
             Assert.True(await SetupRequired(client));
 

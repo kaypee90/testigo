@@ -5,6 +5,7 @@ import { Icons } from "@/components/ui/icons";
 import { useEffect, useState } from "react";
 import { acceptInvitation, apiErrorMessage, getMe, peekInvitation, resendSignUpVerification, signIn, signInWithCode, signUp } from "@/lib/api";
 import type { Me } from "@/lib/platformTypes";
+import { ROLE_LABELS, type Role } from "@/lib/platformTypes";
 
 const field = "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-800 dark:bg-zinc-950";
 
@@ -70,7 +71,7 @@ export default function LoginPage() {
           setMode("signup");
         }
       })
-      .catch(() => setError("We can't connect right now. Please try again in a moment."));
+      .catch(() => setError("No pudimos conectar. Intenta de nuevo en un momento."));
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -142,81 +143,81 @@ export default function LoginPage() {
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <a href="/login" aria-label="Testigo"><Icons.Logo className="mb-4 h-9 w-9 lg:hidden" /></a>
-          <h1 className="text-xl font-semibold tracking-tight">{useRecovery ? "Enter a recovery code" : "Enter your code"}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{useRecovery ? "Ingresa un código de recuperación" : "Ingresa tu código"}</h1>
           <p className="mt-1 text-sm text-zinc-500">
             {useRecovery
-              ? "Enter one of the recovery codes you saved when you turned on two-factor sign-in. Each one works once."
-              : "Open your authenticator app and enter the 6-digit code for Testigo."}
+              ? "Ingresa uno de los códigos que guardaste al activar la verificación en dos pasos. Cada código funciona una sola vez."
+              : "Abre tu aplicación de autenticación e ingresa el código de 6 dígitos para Testigo."}
           </p>
         </div>
         <input key={useRecovery ? "recovery" : "app"} value={code} onChange={(e) => setCode(e.target.value)}
           placeholder={useRecovery ? "xxxxx-xxxxx" : "123 456"} inputMode={useRecovery ? "text" : "numeric"}
           autoComplete={useRecovery ? "off" : "one-time-code"} autoCapitalize="none" spellCheck={false} required autoFocus
-          aria-label={useRecovery ? "Recovery code" : "Code from your authenticator app"}
+          aria-label={useRecovery ? "Código de recuperación" : "Código de tu aplicación de autenticación"}
           className={`${field} text-center font-mono text-lg tracking-widest`} />
         <button type="button" onClick={() => { setUseRecovery(!useRecovery); setCode(""); setError(null); }}
           className="text-xs text-brand-600 hover:underline dark:text-brand-400">
-          {useRecovery ? "Use a code from your app instead" : "No phone? Use a recovery code"}
+          {useRecovery ? "Usar un código de la aplicación" : "¿No tienes el teléfono? Usa un código de recuperación"}
         </button>
         {error && <div className="text-xs text-rose-600">{error}</div>}
         <button type="submit" disabled={busy || !code.trim()} className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-600 disabled:opacity-50">
-          {busy ? "…" : "Sign in"}
+          {busy ? "…" : "Iniciar sesión"}
         </button>
         <button type="button" onClick={() => { setChallenge(null); setCode(""); setUseRecovery(false); setError(null); }}
           className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-          Back
+          Volver
         </button>
       </form>
       ) : (
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <a href="/login" aria-label="Testigo"><Icons.Logo className="mb-4 h-9 w-9 lg:hidden" /></a>
-          <h1 className="text-xl font-semibold tracking-tight">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{mode === "signin" ? "Iniciar sesión" : "Crear tu cuenta"}</h1>
           <p className="mt-1 text-sm text-zinc-500">
             {invitedTo
-              ? `You're invited to join ${invitedTo.organization} as ${invitedTo.role}.`
-              : mode === "signin" ? "Sign in to your organization." : "Create an account and your organization."}
+              ? `Tienes una invitación a ${invitedTo.organization} con el rol ${ROLE_LABELS[invitedTo.role as Role] ?? invitedTo.role}.`
+              : mode === "signin" ? "Accede al panel de tu organización." : "Crea una cuenta y tu organización."}
           </p>
         </div>
 
         {mode === "signup" && (
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" className={field} />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" aria-label="Tu nombre" autoComplete="name" className={field} />
         )}
         {/* Sign-in also takes a username (the local admin), so it's not an email-only field. */}
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={mode === "signin" ? "Email or username" : "Email"}
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={mode === "signin" ? "Correo o usuario" : "Correo electrónico"} aria-label={mode === "signin" ? "Correo o usuario" : "Correo electrónico"}
           type={mode === "signin" ? "text" : "email"} required autoComplete={mode === "signin" ? "username" : "email"}
           readOnly={!!invitedTo} className={field} />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "signup" ? "Password (10+ characters)" : "Password"}
+        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "signup" ? "Contraseña (10 o más caracteres)" : "Contraseña"} aria-label="Contraseña"
           type="password" required autoComplete={mode === "signup" ? "new-password" : "current-password"} className={field} />
         {mode === "signup" && setupRequired && (
           <div className="space-y-1">
-            <input value={setupToken} onChange={(e) => setSetupToken(e.target.value)} placeholder="Setup token" required autoComplete="off" className={field} />
-            <p className="text-xs text-zinc-500">This server has no accounts yet. Its first account needs the setup token from whoever runs it.</p>
+            <input value={setupToken} onChange={(e) => setSetupToken(e.target.value)} placeholder="Código de instalación" aria-label="Código de instalación" required autoComplete="off" className={field} />
+            <p className="text-xs text-zinc-500">Este servidor aún no tiene cuentas. Pide el código de instalación a quien lo administra para crear la primera.</p>
           </div>
         )}
         {mode === "signup" && !invitedTo && (
-          <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Organization name (optional)" className={field} />
+          <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Nombre de la organización (opcional)" aria-label="Nombre de la organización" className={field} />
         )}
 
         {mode === "signup" && !setupRequired && me?.server.email_verification && (
-          <p className="text-xs text-zinc-500">We&apos;ll email you a link to confirm your address before your account is set up.</p>
+          <p className="text-xs text-zinc-500">Recibirás un enlace por correo para confirmar tu dirección antes de crear la cuenta.</p>
         )}
 
         {error && <div className="text-xs text-rose-600">{error}</div>}
 
         <button type="submit" disabled={busy} className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-600 disabled:opacity-50">
-          {busy ? "…" : mode === "signin" ? "Sign in" : invitedTo ? "Create account and join" : "Create account"}
+          {busy ? "…" : mode === "signin" ? "Iniciar sesión" : invitedTo ? "Crear cuenta y unirme" : "Crear cuenta"}
         </button>
 
         {!invitedTo && signupAvailable && (
           <button type="button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
             className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-            {mode === "signin" ? "No account? Create one" : "Have an account? Sign in"}
+            {mode === "signin" ? "¿No tienes cuenta? Crea una" : "¿Ya tienes cuenta? Inicia sesión"}
           </button>
         )}
         {invitedTo && mode === "signup" && (
           <button type="button" onClick={() => setMode("signin")} className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-            Already have an account? Sign in, then open the invitation link again
+            ¿Ya tienes cuenta? Inicia sesión y vuelve a abrir el enlace de invitación
           </button>
         )}
       </form>
@@ -243,7 +244,7 @@ function CheckYourEmail({ email, resendId, hours, onBack }: { email: string; res
     setNote(null);
     try {
       await resendSignUpVerification(resendId);
-      setNote("We've sent a new link. The earlier one no longer works.");
+      setNote("Enviamos un enlace nuevo. El anterior ya no funciona.");
       setWait(60);
     } catch (err) {
       setNote(apiErrorMessage(err));
@@ -257,20 +258,20 @@ function CheckYourEmail({ email, resendId, hours, onBack }: { email: string; res
         <Icons.Mail className="h-5 w-5" />
       </span>
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Check your email</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Revisa tu correo</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          We sent a link to <span className="font-medium text-zinc-800 dark:text-zinc-200">{email}</span>. Open it and enter the password
-          you just chose to confirm your address and finish creating your account. It works for {hours} hours.
+          Enviamos un enlace a <span className="font-medium text-zinc-800 dark:text-zinc-200">{email}</span>. Ábrelo e ingresa la contraseña
+          que elegiste para confirmar tu dirección y terminar de crear la cuenta. El enlace vence en {hours} horas.
         </p>
       </div>
-      <p className="text-xs text-zinc-500">Can&apos;t find it? Check your spam folder, or send a new link.</p>
+      <p className="text-xs text-zinc-500">¿No aparece? Revisa el correo no deseado o solicita otro enlace.</p>
       {note && <p className="text-xs text-zinc-600 dark:text-zinc-400" role="status">{note}</p>}
       <button type="button" onClick={() => void resend()} disabled={wait > 0}
         className="w-full rounded-lg border border-zinc-200 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">
-        {wait > 0 ? `Send a new link in ${wait}s` : "Send a new link"}
+        {wait > 0 ? `Solicitar otro enlace en ${wait}s` : "Solicitar otro enlace"}
       </button>
       <button type="button" onClick={onBack} className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-        Use a different email
+        Usar otro correo
       </button>
     </div>
   );

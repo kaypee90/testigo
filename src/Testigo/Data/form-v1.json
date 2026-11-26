@@ -2,7 +2,7 @@
  "version": "form-v1",
  "language": "es",
  "note": "Starting form for the Phase 0 prototype (FR-INT-1). VALIDATE: fields, wording and required fields to be co-designed with the deploying organization (NFR-UX-3, NFR-UX-4).",
- "notice_version": "aviso-v1",
+ "notice_version": "aviso-v2",
  "fields": [
   {
    "key": "what_happened",
@@ -192,8 +192,8 @@
   {
    "key": "outcome",
    "kind": "multichoice",
-   "label": "¿Qué te gustaría que pasara?",
-   "help": "Opcional.",
+    "label": "¿Qué te gustaría que pasara?",
+    "help": "Opcional. En este ejemplo ficticio no se ofrece atención, orientación legal ni reparación.",
    "options": [
     {
      "key": "stop",
@@ -230,17 +230,17 @@
   {
    "key": "processing",
    "required": true,
-   "label": "Leí la información de arriba y quiero enviar este reporte para que el equipo lo revise."
+    "label": "Leí el aviso de la demo y acepto guardar este ejemplo ficticio. No contiene información real."
   },
   {
    "key": "contact",
    "required": false,
-   "label": "Acepto que me contacten por el medio que indique abajo."
+    "label": "Simular permiso de contacto con un dato inventado. La demo no envía mensajes."
   },
   {
    "key": "publication",
    "required": false,
-   "label": "Acepto que una versión anonimizada del caso se incluya en estadísticas públicas y en el conjunto de datos abierto."
+    "label": "Simular permiso de publicación del ejemplo ficticio. La publicación no está disponible y este permiso no autoriza publicar datos reales."
   }
  ],
  "contact_methods": [
@@ -260,7 +260,7 @@
  "translations": {
   "en": {
    "status": "draft: not yet reviewed by a person. FR-INT-8 requires a person to review it before real use (open question Q15).",
-   "notice_version": "aviso-v1-en",
+    "notice_version": "aviso-v2-en",
    "fields": {
     "what_happened": {
      "label": "What happened?",
@@ -290,7 +290,7 @@
     },
     "outcome": {
      "label": "What would you like to happen?",
-     "help": "Optional."
+     "help": "Optional. This fictional demonstration offers no support, legal guidance or redress."
     }
    },
    "options": {
@@ -345,9 +345,9 @@
     }
    },
    "consents": {
-    "processing": "I have read the information above and want to send this report for the team to review.",
-    "contact": "I agree to be contacted through the method I give below.",
-    "publication": "I agree that an anonymized version of the case may be included in public statistics and in the open dataset."
+     "processing": "I have read the demo notice and agree to store this fictional example. It contains no real information.",
+     "contact": "Simulate contact permission using an invented detail. The demo does not send messages.",
+     "publication": "Simulate publication permission for this fictional example. Publication is not available and this does not authorize publishing real data."
    },
    "contact_methods": {
     "email": "Email",

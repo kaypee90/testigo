@@ -1,14 +1,17 @@
 export type Role = "Viewer" | "Member" | "Admin" | "Owner";
 
 export const ROLES: Role[] = ["Viewer", "Member", "Admin", "Owner"];
+export const ROLE_LABELS: Record<Role, string> = {
+  Viewer: "Lectura", Member: "Integrante", Admin: "Administración", Owner: "Propietario/a",
+};
 
 /** What each organization role may do. Reading report content takes a Testigo staff role on top
  * (Analyst or Reviewer), which an Admin doesn't get by being Admin (NFR-SEC-8). */
 export const ROLE_HELP: Record<Role, string> = {
-  Viewer: "signs in; sees cases only with a staff role",
-  Member: "the same, the usual role for analysts and reviewers",
-  Admin: "also invites and removes members",
-  Owner: "also manages other owners",
+  Viewer: "puede iniciar sesión; solo ve casos si tiene un rol de casos",
+  Member: "igual que Lectura; es el rol habitual de analistas y revisores",
+  Admin: "también invita y retira integrantes",
+  Owner: "también administra a otras personas propietarias",
 };
 
 export function atLeast(role: string | undefined, minimum: Role) {

@@ -65,10 +65,10 @@ public sealed class TestigoCasesController(StaffAccess access, CaseService cases
     }
 
     [HttpGet("cases/{id:guid}")]
-    public async Task<IActionResult> Case(Guid id, [FromQuery] string? reason, CancellationToken cancellationToken)
+    public async Task<IActionResult> Case(Guid id, CancellationToken cancellationToken)
     {
         if (await Staff(cancellationToken) is not { } staff) return Denied();
-        return From(await cases.GetAsync(staff, id, reason, cancellationToken));
+        return From(await cases.GetAsync(staff, id, cancellationToken));
     }
 
     [HttpPost("cases/{id:guid}/suggestions/{suggestionId:guid}")]

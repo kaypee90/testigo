@@ -113,11 +113,11 @@ export function CaseDetail({ caseId, me }: { caseId: string; me: TestigoMe }) {
             <Card>
               <CardHeader
                 title="Reporte"
-                description={redacted ? `Copia sin datos personales (${view.redaction_method ?? "—"})` : "Texto original, tal como lo envió la persona. Es información no verificada."}
+                description={redacted ? `Copia con identificadores detectados sustituidos (${view.redaction_method ?? "—"}). Puede contener otros datos identificables.` : "Texto original, tal como lo envió la persona. Es información no verificada."}
                 actions={view.redacted_text !== null && (
                   <div className="flex gap-1" role="group" aria-label="Versión del texto">
                     <Button size="sm" variant={redacted ? "ghost" : "secondary"} onClick={() => setRedacted(false)}>Original</Button>
-                    <Button size="sm" variant={redacted ? "secondary" : "ghost"} onClick={() => setRedacted(true)}>Sin datos personales</Button>
+                    <Button size="sm" variant={redacted ? "secondary" : "ghost"} onClick={() => setRedacted(true)}>Copia de análisis</Button>
                   </div>
                 )}
               />
@@ -301,7 +301,7 @@ function SuggestionsCard({ view, taxonomy, busy, highlight, onHighlight, onConfi
 function LinksCard({ view, busy, onDecide }: { view: CaseView; busy: boolean; onDecide: (id: string, action: "confirm" | "reject") => void }) {
   return (
     <Card>
-      <CardHeader title="Reportes relacionados" description="Sugeridos comparando las copias sin datos personales. Nunca se fusionan solos." />
+      <CardHeader title="Reportes relacionados" description="Sugeridos comparando las copias de análisis, que pueden conservar datos identificables. Nunca se fusionan solos." />
       <ul className="divide-y divide-zinc-100 px-5 text-sm dark:divide-zinc-800">
         {view.links.length === 0 && <li className="py-3 text-zinc-500">Ninguno sugerido.</li>}
         {view.links.map((l) => (
@@ -356,7 +356,7 @@ function StatusCard({ view, busy, reviewer, onChange }: { view: CaseView; busy: 
             <Button type="submit" variant="primary" size="sm" disabled={busy || !to || !reason.trim()}>Cambiar estado</Button>
           </>
         )}
-        {view.verified_at && <p className="text-xs text-zinc-500">Verificado {fecha(view.verified_at)}.</p>}
+        {view.verified_at && <p className="text-xs text-zinc-500">Revisado por el equipo: {fecha(view.verified_at)}. Este estado no equivale a una resolución judicial ni demuestra la causa del daño. Las citas localizan una sugerencia, no prueban los hechos.</p>}
       </form>
     </Card>
   );
@@ -375,7 +375,7 @@ function ConsentCard({ view, caseId }: { view: CaseView; caseId: string }) {
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1">
           <dt className="text-zinc-500">Tratamiento del reporte</dt><dd>{yes(c.processing)}</dd>
           <dt className="text-zinc-500">Contacto</dt><dd>{yes(c.contact)}</dd>
-          <dt className="text-zinc-500">Publicación sin datos personales</dt><dd>{yes(c.publication)}</dd>
+          <dt className="text-zinc-500">Permiso de publicación (simulado; no disponible)</dt><dd>{yes(c.publication)}</dd>
           {c.withdrawn_at && <><dt className="text-zinc-500">Retirado</dt><dd>{fecha(c.withdrawn_at)}</dd></>}
         </dl>
         {c.has_contact_details && c.contact && (
@@ -389,7 +389,12 @@ function ConsentCard({ view, caseId }: { view: CaseView; caseId: string }) {
             }}>
               <label className="block text-xs text-zinc-500">
                 Ver los datos de contacto: queda registrado. Motivo (obligatorio)
-                <input className={cx(inputClass, "mt-1")} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} />
+                <select className={cx(inputClass, "mt-1")} value={reason} onChange={(e) => setReason(e.target.value)}>
+                  <option value="">Elige un motivo</option>
+                  <option value="follow_up">Seguimiento solicitado</option>
+                  <option value="clarification">Aclarar información del caso</option>
+                  <option value="support_referral">Coordinar apoyo autorizado</option>
+                </select>
               </label>
               <Button size="sm" type="submit" disabled={!reason.trim()} icon={<Icons.Eye className="h-3.5 w-3.5" />}>Ver contacto</Button>
               <ErrorBanner error={error} />

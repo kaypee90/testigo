@@ -13,7 +13,8 @@ namespace AgentRuntime.IntegrationTests.TestSupport;
 /// <summary>
 /// The real API (controllers, auth, persistence, Testigo's triage worker) running in-process
 /// against a throwaway Postgres container, using the Mock LLM provider.
-/// Needs Docker; when it isn't available the tests using this host are skipped, not failed.
+/// Needs Docker/Podman; initialization fails when required infrastructure is unavailable.
+/// A test must never be reported as passed without exercising the database.
 /// Never touches a developer's own stack: its own database in a test-only container on a random
 /// port.
 /// </summary>
@@ -43,13 +44,10 @@ public sealed class ApiTestHost : IAsyncLifetime
     private string? _connectionString;
     private WebApplicationFactory<Program>? _factory;
 
-    /// <summary>Why the host couldn't start (no Docker), or null when it's running.</summary>
-    public string? Unavailable { get; private set; }
-
-    public WebApplicationFactory<Program> Factory => _factory ?? throw new InvalidOperationException(Unavailable);
+    public WebApplicationFactory<Program> Factory => _factory ?? throw new InvalidOperationException("The API test host isn't initialized.");
 
     /// <summary>This host's own database in the shared container.</summary>
-    public string ConnectionString => _connectionString ?? throw new InvalidOperationException(Unavailable);
+    public string ConnectionString => _connectionString ?? throw new InvalidOperationException("The API test host isn't initialized.");
 
     /// <summary>The reporter app's shared key in tests (Testigo:Intake:SharedKey).</summary>
     public const string IntakeKey = "test-intake-key-0123456789abcdefghijklmnop";
@@ -69,8 +67,7 @@ public sealed class ApiTestHost : IAsyncLifetime
         }
         catch (Exception ex)
         {
-            Unavailable = $"Docker isn't available for the API tests' Postgres container: {ex.Message}";
-            return;
+            throw new InvalidOperationException("Required integration-test Postgres could not start. No database-backed tests were executed.", ex);
         }
 
         // A fresh database per host keeps test classes as isolated as their own container did.

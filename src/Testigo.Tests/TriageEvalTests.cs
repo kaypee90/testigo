@@ -29,6 +29,11 @@ public sealed class TriageEvalTests
         Assert.Equal(1.0, result.CitationValidity);
         Assert.Equal(1.0, result.EvidenceValidity);
         Assert.Empty(result.Leaks);
+        // FR-ANA-3, NFR-AI-7: a model-discovered identifier reaches inference even if absent
+        // from the final copy. Keep both boundaries visible instead of claiming zero exposure.
+        Assert.Contains(result.RequestLeaks, leak => leak.Report == "r20" && leak.Identifier == "Lucho");
+        Assert.True(result.RequestIdentifiers > 0);
+        Assert.True(result.ModelRequests >= reports.Count);
         Assert.Equal(1.0, result.Danger.Recall);
         Assert.Equal(result.Reports, result.Repeatable);
         Assert.Equal(3, result.Injections.Count);

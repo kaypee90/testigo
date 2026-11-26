@@ -20,7 +20,7 @@ namespace AgentRuntime.IntegrationTests;
 /// sign up with an address that isn't theirs, with or without an invitation. The test server has no email, so with Auth:EmailVerification=required the links go
 /// to the log, where these tests pick them up.
 /// </summary>
-public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.Fixture fixture, ITestOutputHelper output) : IClassFixture<EmailVerificationApiTests.Fixture>
+public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.Fixture fixture) : IClassFixture<EmailVerificationApiTests.Fixture>
 {
     private const string Password = "correct-horse-battery-staple-1";
 
@@ -35,7 +35,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
             Host.Settings["Auth:SignInAttemptsPerMinute"] = "1000";
             Host.ConfigureServices = services => services.AddSingleton<ILoggerProvider>(Links);
             await Host.InitializeAsync();
-            if (Host.Unavailable is not null) return;
             // The first account (the operator's, with the setup token) is never asked to confirm.
             using var scope = Host.Factory.Services.CreateScope();
             var first = await scope.ServiceProvider.GetRequiredService<IdentityService>().SignUpAsync("first@example.test", Password, "First", null, null, CancellationToken.None);
@@ -75,12 +74,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
 
     private ApiTestHost Host => fixture.Host;
 
-    private bool Skip()
-    {
-        if (Host.Unavailable is null) return false;
-        output.WriteLine("SKIPPED: " + Host.Unavailable);
-        return true;
-    }
 
     private static string NewEmail() => $"new-{Guid.NewGuid():n}@example.test";
 
@@ -118,7 +111,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task An_open_sign_up_creates_the_account_only_when_the_link_is_opened_with_its_password()
     {
-        if (Skip()) return;
         var email = NewEmail();
         using var browser = Host.Factory.CreateClient();
 
@@ -153,7 +145,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task Someone_elses_sign_up_with_your_address_neither_blocks_yours_nor_opens_with_your_password()
     {
-        if (Skip()) return;
         var email = NewEmail();
         // A stranger signs up with the owner's address first, from their own network.
         var strangersLink = await SignUpFromAsync(email, "the-strangers-password-9", "198.51.100.7");
@@ -179,7 +170,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task Signing_up_again_from_the_same_network_waits_a_minute_then_replaces_the_earlier_link()
     {
-        if (Skip()) return;
         var email = NewEmail();
         using var client = Host.Factory.CreateClient();
         await Json(await SignUp(client, email));
@@ -195,7 +185,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task A_link_stops_working_after_five_wrong_passwords()
     {
-        if (Skip()) return;
         var email = NewEmail();
         using var client = Host.Factory.CreateClient();
         await Json(await SignUp(client, email));
@@ -212,7 +201,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task Bad_links_and_resends_give_nothing_away()
     {
-        if (Skip()) return;
         using var client = Host.Factory.CreateClient();
         Assert.Equal(HttpStatusCode.BadRequest, (await Confirm(client, "v_not-a-real-link")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await Confirm(client, "")).StatusCode);
@@ -231,7 +219,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task An_invitation_confirms_the_email_too_and_is_checked_again_when_the_link_is_opened()
     {
-        if (Skip()) return;
         var org = await Host.CreateOrganizationAsync("Inviting");
         using var admin = Host.ClientFor(org);
         using var client = Host.Factory.CreateClient();
@@ -267,7 +254,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task An_address_with_an_account_gets_no_link()
     {
-        if (Skip()) return;
         using var client = Host.Factory.CreateClient();
         var taken = await SignUp(client, "first@example.test");
         Assert.Equal(HttpStatusCode.BadRequest, taken.StatusCode);
@@ -277,7 +263,6 @@ public sealed partial class EmailVerificationApiTests(EmailVerificationApiTests.
     [Fact]
     public async Task The_sign_in_page_is_told_that_new_accounts_confirm_their_email()
     {
-        if (Skip()) return;
         using var client = Host.Factory.CreateClient();
         var me = await Json(await client.GetAsync("/api/auth/me"));
         Assert.True(me.GetProperty("server").GetProperty("email_verification").GetBoolean());

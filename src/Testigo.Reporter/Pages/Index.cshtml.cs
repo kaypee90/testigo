@@ -12,6 +12,8 @@ public sealed class IndexModel(IntakeClient intake, Texts texts) : PageModel
     {
         var form = await intake.FormAsync(texts.Language, cancellationToken);
         Emergency = form?.ContactsFor("CL").Emergency ?? [];
-        AiDescription = texts[$"intro.ai.{(form?.AiMode is "mock" or "cloud" ? form.AiMode : "local")}"];
+        var mode = form?.AiMode is "mock" or "cloud" or "local" ? form.AiMode : "unavailable";
+        var provider = string.Join(" · ", new[] { form?.AiProvider, form?.AiEndpoint }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        AiDescription = texts[$"intro.ai.{mode}"].Replace("{provider}", string.IsNullOrEmpty(provider) ? "—" : provider);
     }
 }

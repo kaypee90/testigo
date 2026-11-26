@@ -11,7 +11,7 @@ namespace AgentRuntime.IntegrationTests;
 /// <summary>Two-factor sign-in (docs/platform.md#two-factor-sign-in) through the real API: a code
 /// from the authenticator app after the password, recovery codes, turning it off, and an operator's
 /// reset. The clock is the test's, so new codes don't need a 30-second wait.</summary>
-public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHelper output) : IClassFixture<TwoFactorTests.Fixture>
+public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture) : IClassFixture<TwoFactorTests.Fixture>
 {
     private const string Password = "correct-horse-battery-staple-1";
     private const string OperatorEmail = "ops-2fa@example.test";
@@ -37,7 +37,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
             Host.Settings["Auth:SignInAttemptsPerMinute"] = "1000";
             Host.ConfigureServices = services => services.AddSingleton<TimeProvider>(Clock);
             await Host.InitializeAsync();
-            if (Host.Unavailable is not null) return;
 
             using var scope = Host.Factory.Services.CreateScope();
             var identity = scope.ServiceProvider.GetRequiredService<IdentityService>();
@@ -58,12 +57,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     private ApiTestHost Host => fixture.Host;
     private ManualClock Clock => fixture.Clock;
 
-    private bool Skip()
-    {
-        if (Host.Unavailable is null) return false;
-        output.WriteLine("SKIPPED: " + Host.Unavailable);
-        return true;
-    }
 
     private static async Task<JsonElement> Json(HttpResponseMessage response)
     {
@@ -124,7 +117,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task After_the_password_a_code_from_the_app_signs_in_and_only_once()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
 
         // The browser that turned it on stays signed in, and says so.
@@ -146,7 +138,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Turning_it_on_signs_out_other_browsers()
     {
-        if (Skip()) return;
         var email = $"sam-{Guid.NewGuid():n}@acme.test";
         using var first = Host.Factory.CreateClient();
         await Json(await first.PostAsJsonAsync("/api/auth/signup", new { email, password = Password, name = "Sam" }));
@@ -163,7 +154,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task A_few_wrong_codes_end_the_sign_in()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var (browser, challenge) = await PasswordStepAsync(account.Email);
         var right = NextCode(account.Secret);
@@ -182,7 +172,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Wrong_codes_add_up_across_sign_ins_until_signing_in_waits()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var right = NextCode(account.Secret);
         var wrong = right == "123456" ? "654321" : "123456";
@@ -209,7 +198,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task The_same_code_sent_twice_at_once_signs_in_only_once()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var code = NextCode(account.Secret);
         var recovery = account.RecoveryCodes[0];
@@ -225,7 +213,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Guesses_sent_at_once_still_stop_at_the_limit()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var (browser, challenge) = await PasswordStepAsync(account.Email);
         var right = NextCode(account.Secret);
@@ -241,7 +228,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task A_code_just_used_says_so_and_isnt_counted_as_a_guess()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var (browser, challenge) = await PasswordStepAsync(account.Email);
 
@@ -258,7 +244,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task A_recovery_code_turns_it_off()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         await Json(await account.Browser.PostAsJsonAsync("/api/auth/two-factor/disable", new { password = Password, code = account.RecoveryCodes[3] }));
         Assert.False((await Json(await account.Browser.GetAsync("/api/auth/two-factor"))).GetProperty("enabled").GetBoolean());
@@ -267,7 +252,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Changing_the_password_ends_a_sign_in_waiting_for_its_code()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var (browser, challenge) = await PasswordStepAsync(account.Email);
 
@@ -280,7 +264,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task An_operator_reset_leaves_an_account_without_it_alone()
     {
-        if (Skip()) return;
         var email = $"kim-{Guid.NewGuid():n}@acme.test";
         using var browser = Host.Factory.CreateClient();
         await Json(await browser.PostAsJsonAsync("/api/auth/signup", new { email, password = Password, name = "Kim" }));
@@ -292,7 +275,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task The_code_step_expires()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var (browser, challenge) = await PasswordStepAsync(account.Email);
 
@@ -304,7 +286,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Each_recovery_code_signs_in_once()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var recovery = account.RecoveryCodes[0].ToUpperInvariant(); // typed any old way
 
@@ -326,7 +307,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task Turning_it_off_takes_the_password_and_a_code()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
         var code = NextCode(account.Secret);
 
@@ -344,7 +324,6 @@ public sealed class TwoFactorTests(TwoFactorTests.Fixture fixture, ITestOutputHe
     [Fact]
     public async Task An_operator_can_turn_it_off_for_someone_locked_out()
     {
-        if (Skip()) return;
         var account = await AccountWithTwoFactorAsync();
 
         // Not something people can do for each other.

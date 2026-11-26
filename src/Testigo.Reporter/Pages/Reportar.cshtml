@@ -97,6 +97,9 @@
         var id = "f-" + field.Key;
         var error = Model.Errors.GetValueOrDefault(field.Key);
         var suffix = field.Required ? T["form.required"] : T["form.optional"];
+        // Null (not "") when there is nothing to point at, so Razor leaves the attribute out.
+        var describedBy = string.Join(" ", new[] { field.Help is null ? null : id + "-help", error is null ? null : id + "-error" }.Where(x => x is not null));
+        string? describedByOrNull = describedBy.Length > 0 ? describedBy : null;
         switch (field.Kind)
         {
             case "longtext":
@@ -107,19 +110,19 @@
                     @if (error is not null) { <p class="field-error" id="@(id)-error">@error</p> }
                     @if (field.Kind == "longtext")
                     {
-                        <textarea id="@id" name="@name" maxlength="@field.MaxLength" aria-describedby="@(id)-help" aria-invalid="@(error is not null ? "true" : "false")">@Model.Value(field.Key)</textarea>
+                        <textarea id="@id" name="@name" maxlength="@field.MaxLength" aria-describedby="@describedByOrNull" aria-invalid="@(error is not null ? "true" : "false")">@Model.Value(field.Key)</textarea>
                     }
                     else
                     {
-                        <input type="text" id="@id" name="@name" maxlength="@field.MaxLength" value="@Model.Value(field.Key)" aria-invalid="@(error is not null ? "true" : "false")">
+                        <input type="text" id="@id" name="@name" maxlength="@field.MaxLength" value="@Model.Value(field.Key)" aria-describedby="@describedByOrNull" aria-invalid="@(error is not null ? "true" : "false")">
                     }
                 </div>
                 break;
             case "multichoice":
-                <fieldset>
+                <fieldset aria-describedby="@describedByOrNull" aria-invalid="@(error is not null ? "true" : "false")">
                     <legend>@field.Label <span class="help">@suffix</span></legend>
-                    @if (field.Help is not null) { <p class="help">@field.Help</p> }
-                    @if (error is not null) { <p class="field-error">@error</p> }
+                    @if (field.Help is not null) { <p class="help" id="@(id)-help">@field.Help</p> }
+                    @if (error is not null) { <p class="field-error" id="@(id)-error">@error</p> }
                     @foreach (var o in field.Options)
                     {
                         <label class="choice"><input type="checkbox" name="@name" value="@o.Key" checked="@Model.Has(field.Key, o.Key)"> <span>@o.Label</span></label>
@@ -130,9 +133,9 @@
                 <div class="field">
                     <label for="@id">@field.Label <span class="help">@suffix</span></label>
                     @if (field.OnlyWhen is not null) { <p class="help">@T["form.region.note"]</p> }
-                    @if (field.Help is not null) { <p class="help">@field.Help</p> }
-                    @if (error is not null) { <p class="field-error">@error</p> }
-                    <select id="@id" name="@name">
+                    @if (field.Help is not null) { <p class="help" id="@(id)-help">@field.Help</p> }
+                    @if (error is not null) { <p class="field-error" id="@(id)-error">@error</p> }
+                    <select id="@id" name="@name" aria-describedby="@describedByOrNull" aria-invalid="@(error is not null ? "true" : "false")">
                         <option value="">—</option>
                         @foreach (var o in field.Options)
                         {
@@ -149,33 +152,34 @@
         <p class="help">@T["form.contact.help"]</p>
         @foreach (var key in new[] { "contact_method", "contact_value" })
         {
-            if (Model.Errors.GetValueOrDefault(key) is { } e) { <p class="field-error">@e</p> }
+            if (Model.Errors.GetValueOrDefault(key) is { } e) { <p class="field-error" id="@(key)-error">@e</p> }
         }
         <p><strong>@T["form.contact.method"]</strong></p>
         @foreach (var m in form.ContactMethods)
         {
-            <label class="choice"><input type="radio" name="contact_method" value="@m.Key" checked="@(Model.ContactMethod == m.Key)"> <span>@m.Label</span></label>
+            <label class="choice"><input type="radio" name="contact_method" value="@m.Key" checked="@(Model.ContactMethod == m.Key)" aria-describedby="@(Model.Errors.ContainsKey("contact_method") ? "contact_method-error" : null)" aria-invalid="@(Model.Errors.ContainsKey("contact_method") ? "true" : "false")"> <span>@m.Label</span></label>
         }
         <label for="contact_value">@T["form.contact.value"]</label>
-        <input type="text" id="contact_value" name="contact_value" maxlength="200" value="@Model.ContactValue" autocomplete="off">
+        <input type="text" id="contact_value" name="contact_value" maxlength="200" value="@Model.ContactValue" autocomplete="off" aria-describedby="@(Model.Errors.ContainsKey("contact_value") ? "contact_value-error" : null)" aria-invalid="@(Model.Errors.ContainsKey("contact_value") ? "true" : "false")">
     </fieldset>
 
     <fieldset>
         <legend>@T["form.consents.heading"]</legend>
         @foreach (var c in form.Consents)
         {
-            if (Model.Errors.GetValueOrDefault("consent_" + c.Key) is { } e) { <p class="field-error">@e</p> }
-            <label class="choice"><input type="checkbox" name="consent" value="@c.Key" checked="@Model.Consents.Contains(c.Key)"> <span>@c.Label @(c.Required ? T["form.required"] : T["form.optional"])</span></label>
+            var consentError = Model.Errors.GetValueOrDefault("consent_" + c.Key);
+            if (consentError is not null) { <p class="field-error" id="consent-@(c.Key)-error">@consentError</p> }
+            <label class="choice"><input type="checkbox" name="consent" value="@c.Key" checked="@Model.Consents.Contains(c.Key)" aria-describedby="@(consentError is null ? null : "consent-" + c.Key + "-error")" aria-invalid="@(consentError is null ? "false" : "true")"> <span>@c.Label @(c.Required ? T["form.required"] : T["form.optional"])</span></label>
         }
         @if (Model.Errors.GetValueOrDefault("consents") is { } ce) { <p class="field-error">@ce</p> }
     </fieldset>
 
     <fieldset>
         <legend>@T["form.passphrase.heading"]</legend>
-        <p class="help">@T["form.passphrase.help"].Replace("{min}", form.PassphraseMinLength.ToString())</p>
-        @if (Model.Errors.GetValueOrDefault("passphrase") is { } pe) { <p class="field-error">@pe</p> }
+        <p class="help" id="passphrase-help">@T["form.passphrase.help"].Replace("{min}", form.PassphraseMinLength.ToString())</p>
+        @if (Model.Errors.GetValueOrDefault("passphrase") is { } pe) { <p class="field-error" id="passphrase-error">@pe</p> }
         <label for="passphrase">@T["form.passphrase.label"]</label>
-        <input type="password" id="passphrase" name="passphrase" autocomplete="new-password" maxlength="200">
+        <input type="password" id="passphrase" name="passphrase" autocomplete="new-password" maxlength="200" aria-describedby="@(Model.Errors.ContainsKey("passphrase") ? "passphrase-help passphrase-error" : "passphrase-help")" aria-invalid="@(Model.Errors.ContainsKey("passphrase") ? "true" : "false")">
     </fieldset>
 
     <p><button class="button" type="submit">@T["form.submit"]</button></p>

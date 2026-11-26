@@ -89,6 +89,7 @@ Spanish is the form's own language and lives at the root (`/`, `/reportar`). Eve
 language lives under its code (`/en`, `/en/reportar`): the address carries the language, so
 switching needs no cookie and no JavaScript. Each page links to itself in the other languages.
 English is there as a worked example, and a draft until a person reviews it (open question Q15).
+Offering that draft is a synthetic-prototype exception, not approval for use with real reporters.
 
 To add Portuguese (or another language):
 
@@ -123,12 +124,13 @@ tool calls out. Domain code never sees a provider's own types.
    never parse free-form text to decide an action.
 2. Register it in `AddLlmProvider` in
    `src/AgentRuntime.Infrastructure/ServiceCollectionExtensions.cs`, under a new `Llm:Provider`
-   name.
+   name. Update the recognized provider list in `CaseModelPolicy`; do not classify a new provider
+   as local without tests of its endpoint and egress policy.
 3. Add contract tests next to the existing ones in `src/AgentRuntime.Tests` (a fake
    `HttpMessageHandler`, no network).
 4. Document it in [`llm-settings.md`](llm-settings.md), including where report text goes when
-   the provider is used ([`data-protection.md`](data-protection.md)). Only redacted text ever
-   reaches a provider.
+   the provider is used ([`data-protection.md`](data-protection.md)). Rules can miss identifiers
+   in the intermediate copy sent to the provider; final-copy redaction occurs afterward.
 
 ### Scripting the Mock provider
 

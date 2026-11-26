@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Testigo staff dashboard
 
-## Getting Started
+Spanish-first Next.js staff interface for the synthetic-data prototype. The public reporter
+application is separate (`../Testigo.Reporter`). Every page retains the prototype banner.
+Authentication, recovery and account settings are in Spanish; human language review remains pending.
 
-First, run the development server:
+Read `AGENTS.md` and the relevant guides in `node_modules/next/dist/docs/` before editing.
+This project uses system fonts and self-hosted resources, not remote font services.
+
+## Local development
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The development server uses port 3000; the repository Compose setup exposes the dashboard at
+http://localhost:3101 and the API at http://localhost:5180. Set `NEXT_PUBLIC_API_BASE_URL` to
+the API origin when needed. See the root README for accounts and two-factor setup.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+These checks do not establish browser accessibility or screen-reader conformance.
+Deployment uses the repository's Docker/Caddy configuration; see `../../docs/`.

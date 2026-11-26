@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     getMe()
       .then((next) => { if (!cancelled) { setMe(next); setError(null); } })
-      .catch(() => { if (!cancelled) setError("We can't connect right now. Please try again in a moment."); });
+      .catch(() => { if (!cancelled) setError("No pudimos conectar. Intenta de nuevo en un momento."); });
     return () => { cancelled = true; };
   }, []);
 
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (
       <div className="m-auto max-w-sm p-8 text-center">
         <div className="text-sm font-medium text-rose-600 dark:text-rose-400">{error}</div>
-        <p className="mt-1 text-xs text-zinc-500">If this keeps happening, reload the page or come back shortly.</p>
+        <p className="mt-1 text-xs text-zinc-500">Si el problema continúa, recarga la página o vuelve en unos minutos.</p>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (!isPublic && (me === null || mustSignIn)) {
     return (
       <div className="m-auto flex items-center gap-2 p-8 text-sm text-zinc-500">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-500" /> Loading…
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-500" /> Cargando…
       </div>
     );
   }

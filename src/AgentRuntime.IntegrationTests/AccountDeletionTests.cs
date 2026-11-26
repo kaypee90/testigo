@@ -15,7 +15,7 @@ namespace AgentRuntime.IntegrationTests;
 /// <summary>Deleting your own account (docs/platform.md#deleting-your-account), through the real
 /// API: a solo organization closes with the account, an organization's only owner can't leave it
 /// ownerless, a member just leaves, and the password is checked.</summary>
-public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture, ITestOutputHelper output) : IClassFixture<AccountDeletionTests.Fixture>
+public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture) : IClassFixture<AccountDeletionTests.Fixture>
 {
     private const string Password = "correct-horse-battery-staple-1";
 
@@ -26,7 +26,6 @@ public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture, I
         public async Task InitializeAsync()
         {
             await Host.InitializeAsync();
-            if (Host.Unavailable is not null) return;
             // The first account takes over the default organization; the tests use later ones.
             using var scope = Host.Factory.Services.CreateScope();
             var signedUp = await scope.ServiceProvider.GetRequiredService<IdentityService>()
@@ -39,12 +38,6 @@ public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture, I
 
     private ApiTestHost Host => fixture.Host;
 
-    private bool Skip()
-    {
-        if (Host.Unavailable is null) return false;
-        output.WriteLine("SKIPPED: " + Host.Unavailable);
-        return true;
-    }
 
     private static async Task<JsonElement> Json(HttpResponseMessage response)
     {
@@ -66,7 +59,6 @@ public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture, I
     [Fact]
     public async Task A_solo_account_closes_its_organization_and_is_gone()
     {
-        if (Skip()) return;
         var email = $"solo-{Guid.NewGuid():n}@example.test";
         var (client, userId, tenantId) = await SignUpAsync(email);
         using var _ = client;
@@ -104,7 +96,6 @@ public sealed class AccountDeletionTests(AccountDeletionTests.Fixture fixture, I
     [Fact]
     public async Task The_only_owner_must_hand_over_and_a_member_just_leaves()
     {
-        if (Skip()) return;
         var ownerEmail = $"owner-{Guid.NewGuid():n}@example.test";
         var memberEmail = $"member-{Guid.NewGuid():n}@example.test";
         var (owner, ownerId, tenantId) = await SignUpAsync(ownerEmail);
