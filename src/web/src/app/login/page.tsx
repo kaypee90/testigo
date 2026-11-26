@@ -5,7 +5,9 @@ import { Icons } from "@/components/ui/icons";
 import { useEffect, useState } from "react";
 import { acceptInvitation, apiErrorMessage, getMe, peekInvitation, resendSignUpVerification, signIn, signInWithCode, signUp } from "@/lib/api";
 import type { Me } from "@/lib/platformTypes";
-import { ROLE_LABELS, type Role } from "@/lib/platformTypes";
+import type { Role } from "@/lib/platformTypes";
+import { useI18n } from "@/lib/i18n/client";
+import { LanguageSwitch } from "@/components/shell/LanguageSwitch";
 
 const field = "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm shadow-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-800 dark:bg-zinc-950";
 
@@ -18,6 +20,7 @@ function safeNext(value: string | null) {
 }
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [me, setMe] = useState<Me | null>(null);
   const [email, setEmail] = useState("");
@@ -30,6 +33,8 @@ export default function LoginPage() {
   const [invitedTo, setInvitedTo] = useState<{ organization: string; role: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The server couldn't be reached; worded at render time so it follows a language switch.
+  const [cantConnect, setCantConnect] = useState(false);
   // Two-factor sign-in: after a right password, the code step.
   const [challenge, setChallenge] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -71,7 +76,7 @@ export default function LoginPage() {
           setMode("signup");
         }
       })
-      .catch(() => setError("No pudimos conectar. Intenta de nuevo en un momento."));
+      .catch(() => setCantConnect(true));
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -113,6 +118,7 @@ export default function LoginPage() {
     }
   }
 
+  const shownError = error ?? (cantConnect ? t.errors.cantConnect : null);
   const setupRequired = !!me?.server.setup_required && !invitation;
   const signupAvailable = !!invitation || setupRequired || me?.server.signup_allowed !== false;
 
@@ -126,98 +132,97 @@ export default function LoginPage() {
           <span className="text-lg font-semibold tracking-tight">Testigo</span>
         </a>
         <div className="relative max-w-md space-y-4">
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight">Panel de análisis de reportes de daños de IA y neurotecnología.</h2>
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight">{t.login.tagline}</h2>
           <ul className="space-y-2 text-sm text-brand-100">
-            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> Reportes cifrados; cada lectura queda registrada</li>
-            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> La IA sugiere con citas del reporte; una persona decide</li>
-            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> Solo con verificación en dos pasos y un rol de casos</li>
+            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> {t.login.point1}</li>
+            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> {t.login.point2}</li>
+            <li className="flex gap-2"><Icons.Check className="h-4 w-4 text-brand-300" /> {t.login.point3}</li>
           </ul>
         </div>
-        <div className="relative text-xs text-brand-200">Prototipo con datos ficticios.</div>
+        <div className="relative text-xs text-brand-200">{t.login.synthetic}</div>
       </div>
 
-      <div className="flex items-center justify-center bg-zinc-50 p-6 dark:bg-zinc-950">
+      <div className="relative flex items-center justify-center bg-zinc-50 p-6 pt-16 dark:bg-zinc-950">
+      <LanguageSwitch className="absolute right-4 top-4" />
       {sentTo ? (
         <CheckYourEmail email={sentTo.email} resendId={sentTo.resendId} hours={sentTo.hours} onBack={() => { setSentTo(null); setError(null); }} />
       ) : challenge ? (
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <a href="/login" aria-label="Testigo"><Icons.Logo className="mb-4 h-9 w-9 lg:hidden" /></a>
-          <h1 className="text-xl font-semibold tracking-tight">{useRecovery ? "Ingresa un código de recuperación" : "Ingresa tu código"}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{useRecovery ? t.login.recoveryTitle : t.login.codeTitle}</h1>
           <p className="mt-1 text-sm text-zinc-500">
-            {useRecovery
-              ? "Ingresa uno de los códigos que guardaste al activar la verificación en dos pasos. Cada código funciona una sola vez."
-              : "Abre tu aplicación de autenticación e ingresa el código de 6 dígitos para Testigo."}
+            {useRecovery ? t.login.recoveryHelp : t.login.codeHelp}
           </p>
         </div>
         <input key={useRecovery ? "recovery" : "app"} value={code} onChange={(e) => setCode(e.target.value)}
           placeholder={useRecovery ? "xxxxx-xxxxx" : "123 456"} inputMode={useRecovery ? "text" : "numeric"}
           autoComplete={useRecovery ? "off" : "one-time-code"} autoCapitalize="none" spellCheck={false} required autoFocus
-          aria-label={useRecovery ? "Código de recuperación" : "Código de tu aplicación de autenticación"}
+          aria-label={useRecovery ? t.login.recoveryCode : t.login.appCode}
           className={`${field} text-center font-mono text-lg tracking-widest`} />
         <button type="button" onClick={() => { setUseRecovery(!useRecovery); setCode(""); setError(null); }}
           className="text-xs text-brand-600 hover:underline dark:text-brand-400">
-          {useRecovery ? "Usar un código de la aplicación" : "¿No tienes el teléfono? Usa un código de recuperación"}
+          {useRecovery ? t.login.useApp : t.login.useRecovery}
         </button>
-        {error && <div className="text-xs text-rose-600">{error}</div>}
+        {shownError && <div className="text-xs text-rose-600">{shownError}</div>}
         <button type="submit" disabled={busy || !code.trim()} className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-600 disabled:opacity-50">
-          {busy ? "…" : "Iniciar sesión"}
+          {busy ? t.common.busy : t.login.signIn}
         </button>
         <button type="button" onClick={() => { setChallenge(null); setCode(""); setUseRecovery(false); setError(null); }}
           className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-          Volver
+          {t.common.back}
         </button>
       </form>
       ) : (
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
         <div>
           <a href="/login" aria-label="Testigo"><Icons.Logo className="mb-4 h-9 w-9 lg:hidden" /></a>
-          <h1 className="text-xl font-semibold tracking-tight">{mode === "signin" ? "Iniciar sesión" : "Crear tu cuenta"}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{mode === "signin" ? t.login.signIn : t.login.createAccount}</h1>
           <p className="mt-1 text-sm text-zinc-500">
             {invitedTo
-              ? `Tienes una invitación a ${invitedTo.organization} con el rol ${ROLE_LABELS[invitedTo.role as Role] ?? invitedTo.role}.`
-              : mode === "signin" ? "Accede al panel de tu organización." : "Crea una cuenta y tu organización."}
+              ? t.login.invited(invitedTo.organization, t.roles.labels[invitedTo.role as Role] ?? invitedTo.role)
+              : mode === "signin" ? t.login.signInHelp : t.login.signUpHelp}
           </p>
         </div>
 
         {mode === "signup" && (
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" aria-label="Tu nombre" autoComplete="name" className={field} />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.login.yourName} aria-label={t.login.yourName} autoComplete="name" className={field} />
         )}
         {/* Sign-in also takes a username (the local admin), so it's not an email-only field. */}
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={mode === "signin" ? "Correo o usuario" : "Correo electrónico"} aria-label={mode === "signin" ? "Correo o usuario" : "Correo electrónico"}
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={mode === "signin" ? t.login.emailOrUser : t.login.email} aria-label={mode === "signin" ? t.login.emailOrUser : t.login.email}
           type={mode === "signin" ? "text" : "email"} required autoComplete={mode === "signin" ? "username" : "email"}
           readOnly={!!invitedTo} className={field} />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "signup" ? "Contraseña (10 o más caracteres)" : "Contraseña"} aria-label="Contraseña"
+        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "signup" ? t.login.passwordNew : t.login.password} aria-label={t.login.password}
           type="password" required autoComplete={mode === "signup" ? "new-password" : "current-password"} className={field} />
         {mode === "signup" && setupRequired && (
           <div className="space-y-1">
-            <input value={setupToken} onChange={(e) => setSetupToken(e.target.value)} placeholder="Código de instalación" aria-label="Código de instalación" required autoComplete="off" className={field} />
-            <p className="text-xs text-zinc-500">Este servidor aún no tiene cuentas. Pide el código de instalación a quien lo administra para crear la primera.</p>
+            <input value={setupToken} onChange={(e) => setSetupToken(e.target.value)} placeholder={t.login.setupToken} aria-label={t.login.setupToken} required autoComplete="off" className={field} />
+            <p className="text-xs text-zinc-500">{t.login.setupHelp}</p>
           </div>
         )}
         {mode === "signup" && !invitedTo && (
-          <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Nombre de la organización (opcional)" aria-label="Nombre de la organización" className={field} />
+          <input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder={t.login.organizationOptional} aria-label={t.login.organization} className={field} />
         )}
 
         {mode === "signup" && !setupRequired && me?.server.email_verification && (
-          <p className="text-xs text-zinc-500">Recibirás un enlace por correo para confirmar tu dirección antes de crear la cuenta.</p>
+          <p className="text-xs text-zinc-500">{t.login.verificationNote}</p>
         )}
 
-        {error && <div className="text-xs text-rose-600">{error}</div>}
+        {shownError && <div className="text-xs text-rose-600">{shownError}</div>}
 
         <button type="submit" disabled={busy} className="w-full rounded-lg bg-brand-500 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-600 disabled:opacity-50">
-          {busy ? "…" : mode === "signin" ? "Iniciar sesión" : invitedTo ? "Crear cuenta y unirme" : "Crear cuenta"}
+          {busy ? t.common.busy : mode === "signin" ? t.login.signIn : invitedTo ? t.login.createAndJoin : t.login.create}
         </button>
 
         {!invitedTo && signupAvailable && (
           <button type="button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
             className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-            {mode === "signin" ? "¿No tienes cuenta? Crea una" : "¿Ya tienes cuenta? Inicia sesión"}
+            {mode === "signin" ? t.login.noAccount : t.login.haveAccount}
           </button>
         )}
         {invitedTo && mode === "signup" && (
           <button type="button" onClick={() => setMode("signin")} className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-            ¿Ya tienes cuenta? Inicia sesión y vuelve a abrir el enlace de invitación
+            {t.login.haveAccountInvited}
           </button>
         )}
       </form>
@@ -232,6 +237,7 @@ export default function LoginPage() {
  * to the address is opened. A new link can be sent once a minute.
  */
 function CheckYourEmail({ email, resendId, hours, onBack }: { email: string; resendId: string; hours: number; onBack: () => void }) {
+  const { t } = useI18n();
   const [wait, setWait] = useState(60);
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
@@ -244,7 +250,7 @@ function CheckYourEmail({ email, resendId, hours, onBack }: { email: string; res
     setNote(null);
     try {
       await resendSignUpVerification(resendId);
-      setNote("Enviamos un enlace nuevo. El anterior ya no funciona.");
+      setNote(t.login.resent);
       setWait(60);
     } catch (err) {
       setNote(apiErrorMessage(err));
@@ -258,20 +264,19 @@ function CheckYourEmail({ email, resendId, hours, onBack }: { email: string; res
         <Icons.Mail className="h-5 w-5" />
       </span>
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Revisa tu correo</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t.login.checkEmail}</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Enviamos un enlace a <span className="font-medium text-zinc-800 dark:text-zinc-200">{email}</span>. Ábrelo e ingresa la contraseña
-          que elegiste para confirmar tu dirección y terminar de crear la cuenta. El enlace vence en {hours} horas.
+          {t.login.sentBefore} <span className="font-medium text-zinc-800 dark:text-zinc-200">{email}</span>{t.login.sentAfter(hours)}
         </p>
       </div>
-      <p className="text-xs text-zinc-500">¿No aparece? Revisa el correo no deseado o solicita otro enlace.</p>
+      <p className="text-xs text-zinc-500">{t.login.notArrived}</p>
       {note && <p className="text-xs text-zinc-600 dark:text-zinc-400" role="status">{note}</p>}
       <button type="button" onClick={() => void resend()} disabled={wait > 0}
         className="w-full rounded-lg border border-zinc-200 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">
-        {wait > 0 ? `Solicitar otro enlace en ${wait}s` : "Solicitar otro enlace"}
+        {wait > 0 ? t.login.resendIn(wait) : t.login.resend}
       </button>
       <button type="button" onClick={onBack} className="w-full text-center text-xs text-brand-600 hover:underline dark:text-brand-400">
-        Usar otro correo
+        {t.login.otherEmail}
       </button>
     </div>
   );

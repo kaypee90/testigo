@@ -33,14 +33,12 @@ import {
   PageHeader,
   Stat,
   Tabs,
-  ago,
   inlineInputClass,
   inputClass,
 } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/client";
 
 type Tab = "overview" | "organizations";
-
-const date = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString() : "—");
 
 /**
  * The platform admin portal (docs/platform.md#platform-administration): every organization on the
@@ -49,6 +47,7 @@ const date = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDa
  */
 export default function AdminPage() {
   const { me } = useAuth();
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("overview");
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +67,7 @@ export default function AdminPage() {
   if (!isOperator) {
     return (
       <div className="p-6">
-        <EmptyState icon={<Icons.Lock className="h-5 w-5" />} title="Operators only"
-          description="The platform admin portal is for the server's operators (PLATFORM_ADMIN_EMAIL)." />
+        <EmptyState icon={<Icons.Lock className="h-5 w-5" />} title={t.admin.operatorsOnly} description={t.admin.operatorsOnlyBody} />
       </div>
     );
   }
@@ -77,17 +75,17 @@ export default function AdminPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <PageHeader
-        title="Platform admin"
-        description="Every organization on this server and the people in them."
-        actions={<Button variant="primary" icon={<Icons.Plus className="h-4 w-4" />} onClick={() => setCreating(true)}>New organization</Button>}
+        title={t.admin.title}
+        description={t.admin.description}
+        actions={<Button variant="primary" icon={<Icons.Plus className="h-4 w-4" />} onClick={() => setCreating(true)}>{t.admin.newOrganization}</Button>}
       >
         <Tabs<Tab>
           className="mt-4 -mb-5"
           value={tab}
           onChange={setTab}
           tabs={[
-            { id: "overview", label: "Overview" },
-            { id: "organizations", label: "Organizations", count: overview?.organizations },
+            { id: "overview", label: t.admin.tabOverview },
+            { id: "organizations", label: t.admin.tabOrganizations, count: overview?.organizations },
           ]}
         />
       </PageHeader>
@@ -96,7 +94,7 @@ export default function AdminPage() {
         <ErrorBanner error={error} onClose={() => setError(null)} />
         {overview && !overview.email_enabled && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-            Outgoing email isn&apos;t set up (EMAIL_SMTP_HOST), so invitations aren&apos;t emailed: copy each invite link and send it yourself.
+            {t.admin.noEmail}
           </div>
         )}
 
@@ -116,18 +114,19 @@ export default function AdminPage() {
 // ---- Overview ---------------------------------------------------------------------------
 
 function OverviewTab({ overview }: { overview: AdminOverview | null }) {
-  if (!overview) return <div className="text-sm text-zinc-500">Loading…</div>;
+  const { t, ago } = useI18n();
+  if (!overview) return <div className="text-sm text-zinc-500">{t.common.loading}</div>;
   return (
     <>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <Stat label="Organizations" value={overview.organizations} hint={`${overview.active_organizations} active`} />
-        <Stat label="Suspended" value={overview.suspended_organizations} />
-        <Stat label="Members" value={overview.members} hint="across all organizations" />
+        <Stat label={t.admin.statOrganizations} value={overview.organizations} hint={t.admin.statActive(overview.active_organizations)} />
+        <Stat label={t.admin.statSuspended} value={overview.suspended_organizations} />
+        <Stat label={t.admin.statMembers} value={overview.members} hint={t.admin.statMembersHint} />
       </div>
       <Card>
-        <CardHeader title="Recent operator activity" description="Every change made here is recorded in the platform audit log." />
+        <CardHeader title={t.admin.activityTitle} description={t.admin.activityDescription} />
         {overview.recent_activity.length === 0 ? (
-          <div className="px-5 py-6 text-sm text-zinc-500">Nothing yet.</div>
+          <div className="px-5 py-6 text-sm text-zinc-500">{t.admin.nothingYet}</div>
         ) : (
           <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {overview.recent_activity.map((a, i) => (
@@ -153,29 +152,30 @@ const WEB_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || null;
  * website was built from the same commit (a deploy that only half finished shows here). */
 function VersionCard({ version }: { version: AdminOverview["version"] }) {
   const server = version?.commit ?? null;
+  const { t, dateTime, ago } = useI18n();
   const differs = !!server && !!WEB_VERSION && server !== WEB_VERSION;
-  const when = (at: string | null | undefined) => (at ? `${new Date(at).toLocaleString()} (${ago(at)})` : "not recorded");
+  const when = (at: string | null | undefined) => (at ? `${dateTime(at)} (${ago(at)})` : t.admin.notRecorded);
   return (
     <Card>
-      <CardHeader title="Version" description="Which build is running. Each deploy is stamped with the commit it was built from." />
+      <CardHeader title={t.admin.versionTitle} description={t.admin.versionDescription} />
       <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 px-5 pb-5 text-sm">
-        <dt className="text-zinc-500">Server</dt>
+        <dt className="text-zinc-500">{t.admin.server}</dt>
         <dd className="font-mono">
-          {!server ? <span className="font-sans text-zinc-500">Not stamped (a local or manual build)</span>
+          {!server ? <span className="font-sans text-zinc-500">{t.admin.notStamped}</span>
             : version?.short_commit}
         </dd>
-        <dt className="text-zinc-500">Built</dt>
+        <dt className="text-zinc-500">{t.admin.built}</dt>
         <dd>{when(version?.built_at)}</dd>
-        <dt className="text-zinc-500">Running since</dt>
+        <dt className="text-zinc-500">{t.admin.runningSince}</dt>
         <dd>{when(version?.started_at)}</dd>
-        <dt className="text-zinc-500">Website</dt>
+        <dt className="text-zinc-500">{t.admin.website}</dt>
         <dd className="font-mono">
-          {WEB_VERSION ? WEB_VERSION.slice(0, 7) : <span className="font-sans text-zinc-500">Not stamped (a local or manual build)</span>}
+          {WEB_VERSION ? WEB_VERSION.slice(0, 7) : <span className="font-sans text-zinc-500">{t.admin.notStamped}</span>}
         </dd>
       </dl>
       {differs && (
         <div className="mx-5 mb-5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-          The website and the server were built from different commits: a deploy may not have finished.
+          {t.admin.versionsDiffer}
         </div>
       )}
     </Card>
@@ -185,6 +185,7 @@ function VersionCard({ version }: { version: AdminOverview["version"] }) {
 /** For someone who lost their phone and their recovery codes: they sign in with their password
  * again, then turn two-factor sign-in back on themselves. */
 function ResetTwoFactorCard() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -192,12 +193,12 @@ function ResetTwoFactorCard() {
   async function reset(e: React.FormEvent) {
     e.preventDefault();
     const who = email.trim();
-    if (!confirm(`Turn off two-factor sign-in for ${who} and sign out all their browsers? Only do this once you're sure it's really them asking.`)) return;
+    if (!confirm(t.admin.confirmReset(who))) return;
     setBusy(true);
     setMessage(null);
     try {
       await adminResetTwoFactor(who);
-      setMessage({ ok: true, text: `Two-factor sign-in is off for ${who}. They can sign in with their password and turn it back on.` });
+      setMessage({ ok: true, text: t.admin.resetDone(who) });
       setEmail("");
     } catch (err) {
       setMessage({ ok: false, text: apiErrorMessage(err) });
@@ -208,13 +209,12 @@ function ResetTwoFactorCard() {
 
   return (
     <Card>
-      <CardHeader title="Locked out of two-factor sign-in"
-        description="For someone who lost both their phone and their recovery codes. Check it's really them first, e.g. by replying from the email address on the account." />
+      <CardHeader title={t.admin.lockedTitle} description={t.admin.lockedDescription} />
       <form onSubmit={reset} className="flex flex-wrap items-center gap-2 px-5 pb-5">
         {/* Text, not email: the local admin signs in with a username. */}
-        <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Their email (or username)" required
-          aria-label="Email or username of the locked-out account" autoCapitalize="none" spellCheck={false} className={`${inputClass} max-w-xs`} />
-        <Button size="sm" type="submit" disabled={busy || !email.trim()}>{busy ? "…" : "Turn off two-factor"}</Button>
+        <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.admin.lockedPlaceholder} required
+          aria-label={t.admin.lockedLabel} autoCapitalize="none" spellCheck={false} className={`${inputClass} max-w-xs`} />
+        <Button size="sm" type="submit" disabled={busy || !email.trim()}>{busy ? t.common.busy : t.admin.turnOff}</Button>
         {message && <span className={`text-xs ${message.ok ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600"}`}>{message.text}</span>}
       </form>
     </Card>
@@ -224,10 +224,12 @@ function ResetTwoFactorCard() {
 // ---- Organizations ----------------------------------------------------------------------------
 
 function OrgStatus({ org }: { org: Pick<AdminOrganization, "status"> }) {
-  return org.status === "Suspended" ? <Badge tone="red">Suspended</Badge> : <Badge tone="green">Active</Badge>;
+  const { t } = useI18n();
+  return org.status === "Suspended" ? <Badge tone="red">{t.admin.suspended}</Badge> : <Badge tone="green">{t.admin.active}</Badge>;
 }
 
 function OrganizationsTab({ onOpen, onError }: { onOpen: (id: string) => void; onError: (e: string) => void }) {
+  const { t, date, ago } = useI18n();
   const [orgs, setOrgs] = useState<AdminOrganization[] | null>(null);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
@@ -242,28 +244,28 @@ function OrganizationsTab({ onOpen, onError }: { onOpen: (id: string) => void; o
   return (
     <Card>
       <div className="flex flex-wrap gap-2 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, id or member email" className={`${inlineInputClass} min-w-0 flex-1`} />
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className={inlineInputClass} aria-label="Status">
-          <option value="">All statuses</option>
-          <option value="Active">Active</option>
-          <option value="Suspended">Suspended</option>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.admin.search} aria-label={t.admin.search} className={`${inlineInputClass} min-w-0 flex-1`} />
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={inlineInputClass} aria-label={t.admin.status}>
+          <option value="">{t.admin.allStatuses}</option>
+          <option value="Active">{t.admin.active}</option>
+          <option value="Suspended">{t.admin.suspended}</option>
         </select>
       </div>
       {orgs === null ? (
-        <div className="px-5 py-6 text-sm text-zinc-500">Loading…</div>
+        <div className="px-5 py-6 text-sm text-zinc-500">{t.common.loading}</div>
       ) : orgs.length === 0 ? (
-        <div className="p-5"><EmptyState title="No organizations match" /></div>
+        <div className="p-5"><EmptyState title={t.admin.noMatch} /></div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-[11px] uppercase tracking-wide text-zinc-500">
               <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                <th className="px-4 py-2 font-medium">Organization</th>
-                <th className="px-4 py-2 font-medium">Status</th>
-                <th className="px-4 py-2 font-medium">Members</th>
-                <th className="hidden px-4 py-2 font-medium md:table-cell">Owner</th>
-                <th className="hidden px-4 py-2 font-medium md:table-cell">Last active</th>
-                <th className="hidden px-4 py-2 font-medium lg:table-cell">Created</th>
+                <th className="px-4 py-2 font-medium">{t.admin.colOrganization}</th>
+                <th className="px-4 py-2 font-medium">{t.admin.colStatus}</th>
+                <th className="px-4 py-2 font-medium">{t.admin.colMembers}</th>
+                <th className="hidden px-4 py-2 font-medium md:table-cell">{t.admin.colOwner}</th>
+                <th className="hidden px-4 py-2 font-medium md:table-cell">{t.admin.colLastActive}</th>
+                <th className="hidden px-4 py-2 font-medium lg:table-cell">{t.admin.colCreated}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -275,7 +277,7 @@ function OrganizationsTab({ onOpen, onError }: { onOpen: (id: string) => void; o
                   </td>
                   <td className="px-4 py-2.5"><OrgStatus org={o} /></td>
                   <td className="px-4 py-2.5 tabular-nums">
-                    {o.members}{o.pending_invitations > 0 && <span className="text-xs text-zinc-500"> +{o.pending_invitations} invited</span>}
+                    {o.members}{o.pending_invitations > 0 && <span className="text-xs text-zinc-500">{t.admin.invitedCount(o.pending_invitations)}</span>}
                   </td>
                   <td className="hidden px-4 py-2.5 md:table-cell">{o.owner_email ?? "—"}</td>
                   <td className="hidden px-4 py-2.5 text-zinc-500 md:table-cell">{ago(o.last_active_at)}</td>
@@ -292,10 +294,12 @@ function OrganizationsTab({ onOpen, onError }: { onOpen: (id: string) => void; o
 
 /** What adding someone did, with the link to pass on when it wasn't emailed. */
 function AddedNotice({ person }: { person: AddedPerson }) {
+  const { t } = useI18n();
+  const role = t.roles.labels[person.role] ?? person.role;
   if (person.joined) {
     return (
       <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-        {person.email} already had an account and now has {person.role} access.{person.email_sent ? " We emailed them." : ""}
+        {t.admin.joined(person.email, role)}{person.email_sent ? t.admin.emailed : ""}
       </div>
     );
   }
@@ -303,8 +307,8 @@ function AddedNotice({ person }: { person: AddedPerson }) {
   return (
     <div className="space-y-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">
       <div>
-        Invited {person.email} as {person.role}.{" "}
-        {person.email_sent ? "We emailed them the link." : "Email isn't set up or didn't send, so share this one-time link with them:"}
+        {t.admin.invitedAs(person.email, role)}{" "}
+        {person.email_sent ? t.admin.emailedLink : t.admin.shareLink}
       </div>
       {person.invite_url && <CopyField value={person.invite_url} />}
     </div>
@@ -312,6 +316,7 @@ function AddedNotice({ person }: { person: AddedPerson }) {
 }
 
 function CreateOrganizationModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [owner, setOwner] = useState("");
   const [busy, setBusy] = useState(false);
@@ -333,17 +338,17 @@ function CreateOrganizationModal({ onClose, onCreated }: { onClose: () => void; 
   }
 
   return (
-    <Modal open onClose={onClose} title="New organization" description="It gets its own members and cases. Its owner sets their own password from the invitation."
+    <Modal open onClose={onClose} title={t.admin.newOrganization} description={t.admin.createDescription}
       footer={result
-        ? <Button variant="primary" onClick={() => { onClose(); onCreated(result.id); }}>Open organization</Button>
-        : <><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" type="submit" form="create-org" disabled={busy}>{busy ? "Creating…" : "Create"}</Button></>}>
+        ? <Button variant="primary" onClick={() => { onClose(); onCreated(result.id); }}>{t.admin.openOrganization}</Button>
+        : <><Button variant="ghost" onClick={onClose}>{t.common.cancel}</Button><Button variant="primary" type="submit" form="create-org" disabled={busy}>{busy ? t.admin.creating : t.admin.create}</Button></>}>
       {result ? (
         <AddedNotice person={result.owner} />
       ) : (
         <form id="create-org" onSubmit={submit} className="space-y-3">
-          <Field label="Name"><input value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} className={inputClass} placeholder="Organización Ejemplo" /></Field>
-          <Field label="Owner's email" hint="An existing account joins straight away; anyone else gets an invitation.">
-            <input value={owner} onChange={(e) => setOwner(e.target.value)} type="email" required className={inputClass} placeholder="persona@ejemplo.org" />
+          <Field label={t.admin.name}><input value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} className={inputClass} placeholder={t.admin.namePlaceholder} /></Field>
+          <Field label={t.admin.ownerEmail} hint={t.admin.ownerHint}>
+            <input value={owner} onChange={(e) => setOwner(e.target.value)} type="email" required className={inputClass} placeholder={t.admin.emailPlaceholder} />
           </Field>
           <ErrorBanner error={error} />
         </form>
@@ -354,6 +359,7 @@ function CreateOrganizationModal({ onClose, onCreated }: { onClose: () => void; 
 
 function OrganizationModal({ tenantId, onClose }: { tenantId: string; onClose: () => void }) {
   const { me } = useAuth();
+  const { t, date, ago } = useI18n();
   const [detail, setDetail] = useState<AdminOrganizationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -389,64 +395,63 @@ function OrganizationModal({ tenantId, onClose }: { tenantId: string; onClose: (
   const isOwnOrg = me?.organizations?.some((o) => o.tenant_id === tenantId);
 
   return (
-    <Modal open wide onClose={onClose} title={org?.name ?? "Organization"} description={org ? `${org.tenant_id} · created ${date(org.created_at)}` : undefined}>
+    <Modal open wide onClose={onClose} title={org?.name ?? t.admin.organization} description={org ? `${org.tenant_id} · ${t.admin.created(date(org.created_at))}` : undefined}>
       {!detail || !org ? (
-        error ? <ErrorBanner error={error} /> : <div className="text-sm text-zinc-500">Loading…</div>
+        error ? <ErrorBanner error={error} /> : <div className="text-sm text-zinc-500">{t.common.loading}</div>
       ) : (
         <div className="space-y-5">
           <ErrorBanner error={error} onClose={() => setError(null)} />
 
           <div className="flex flex-wrap items-center gap-2">
             <OrgStatus org={org} />
-            {org.status === "Suspended" && <span className="text-xs text-zinc-500">since {date(org.suspended_at)}: {org.suspended_reason}</span>}
+            {org.status === "Suspended" && <span className="text-xs text-zinc-500">{t.admin.since(date(org.suspended_at), org.suspended_reason)}</span>}
             <div className="ml-auto flex gap-2">
               {org.status === "Suspended" ? (
-                <Button size="sm" variant="primary" disabled={busy} onClick={() => run(() => reactivateOrganization(tenantId))}>Reactivate</Button>
+                <Button size="sm" variant="primary" disabled={busy} onClick={() => run(() => reactivateOrganization(tenantId))}>{t.admin.reactivate}</Button>
               ) : (
                 <Button size="sm" variant="danger" disabled={busy || isOwnOrg}
-                  title={isOwnOrg ? "You belong to this organization; suspending it would lock you out." : undefined}
-                  onClick={() => setSuspending(true)}>Suspend</Button>
+                  title={isOwnOrg ? t.admin.ownOrg : undefined}
+                  onClick={() => setSuspending(true)}>{t.admin.suspend}</Button>
               )}
             </div>
           </div>
 
           {suspending && (
             <div className="space-y-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900/60 dark:bg-rose-950/30">
-              <div className="text-sm font-medium text-rose-800 dark:text-rose-300">Suspend {org.name}?</div>
+              <div className="text-sm font-medium text-rose-800 dark:text-rose-300">{t.admin.suspendQuestion(org.name)}</div>
               <p className="text-xs text-rose-700 dark:text-rose-300/80">
-                Members are signed out and can&apos;t sign in to it, and its invitations stop working. Nothing is deleted;
-                reactivating restores everything.
+                {t.admin.suspendBody}
               </p>
-              <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (shown to operators)" className={inputClass} />
+              <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t.admin.suspendReason} aria-label={t.admin.suspendReason} className={inputClass} />
               <div className="flex justify-end gap-2">
-                <Button size="sm" variant="ghost" onClick={() => setSuspending(false)}>Cancel</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSuspending(false)}>{t.common.cancel}</Button>
                 <Button size="sm" variant="danger" disabled={busy} onClick={() => run(async () => { await suspendOrganization(tenantId, reason); setSuspending(false); setReason(""); })}>
-                  Suspend organization
+                  {t.admin.suspendOrganization}
                 </Button>
               </div>
             </div>
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Name">
+            <Field label={t.admin.name}>
               <div className="flex gap-2">
                 <input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className={inputClass} />
-                <Button disabled={busy || !name.trim() || name === org.name} onClick={() => run(() => updateAdminOrganization(tenantId, { name }))}>Save</Button>
+                <Button disabled={busy || !name.trim() || name === org.name} onClick={() => run(() => updateAdminOrganization(tenantId, { name }))}>{t.common.save}</Button>
               </div>
             </Field>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold">People</h3>
+            <h3 className="text-sm font-semibold">{t.admin.people}</h3>
             <form className="flex flex-wrap gap-2" onSubmit={(e) => {
               e.preventDefault();
               void run(async () => { setAdded(await adminAddMember(tenantId, email, role)); setEmail(""); });
             }}>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder="persona@ejemplo.org" className={`${inlineInputClass} min-w-0 flex-1`} />
-              <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={inlineInputClass} aria-label="Role">
-                {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder={t.admin.emailPlaceholder} aria-label={t.admin.emailPlaceholder} className={`${inlineInputClass} min-w-0 flex-1`} />
+              <select value={role} onChange={(e) => setRole(e.target.value as Role)} className={inlineInputClass} aria-label={t.admin.role}>
+                {ROLES.map((r) => <option key={r} value={r}>{t.roles.labels[r]}</option>)}
               </select>
-              <Button type="submit" variant="primary" disabled={busy}>Add person</Button>
+              <Button type="submit" variant="primary" disabled={busy}>{t.admin.addPerson}</Button>
             </form>
             {added && <AddedNotice person={added} />}
 
@@ -459,16 +464,16 @@ function OrganizationModal({ tenantId, onClose }: { tenantId: string; onClose: (
                         <div className="font-medium">{m.name}</div>
                         <div className="text-xs text-zinc-500">{m.email}</div>
                       </td>
-                      <td className="hidden px-3 py-2 text-xs text-zinc-500 sm:table-cell">last sign-in {ago(m.last_login_at)}</td>
+                      <td className="hidden px-3 py-2 text-xs text-zinc-500 sm:table-cell">{t.admin.lastSignIn(ago(m.last_login_at))}</td>
                       <td className="px-3 py-2">
-                        <select value={m.role} disabled={busy} aria-label={`Role of ${m.email}`}
+                        <select value={m.role} disabled={busy} aria-label={t.admin.roleOf(m.email)}
                           onChange={(e) => run(() => adminSetMemberRole(tenantId, m.user_id, e.target.value as Role))} className={inlineInputClass}>
-                          {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                          {ROLES.map((r) => <option key={r} value={r}>{t.roles.labels[r]}</option>)}
                         </select>
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <Button size="sm" variant="ghost" disabled={busy} title="Remove from this organization"
-                          onClick={() => { if (confirm(`Remove ${m.email} from ${org.name}?`)) void run(() => adminRemoveMember(tenantId, m.user_id)); }}>
+                        <Button size="sm" variant="ghost" disabled={busy} title={t.admin.removeTitle} aria-label={t.admin.removeTitle}
+                          onClick={() => { if (confirm(t.admin.confirmRemove(m.email, org.name))) void run(() => adminRemoveMember(tenantId, m.user_id)); }}>
                           <Icons.Trash className="h-3.5 w-3.5" />
                         </Button>
                       </td>
@@ -478,12 +483,12 @@ function OrganizationModal({ tenantId, onClose }: { tenantId: string; onClose: (
                     <tr key={i.invitation_id} className="bg-zinc-50/60 dark:bg-zinc-900/40">
                       <td className="px-3 py-2">
                         <div className="text-zinc-600 dark:text-zinc-400">{i.email}</div>
-                        <div className="text-xs text-zinc-500">invited · expires {date(i.expires_at)}</div>
+                        <div className="text-xs text-zinc-500">{t.admin.invitedExpires(date(i.expires_at))}</div>
                       </td>
                       <td className="hidden sm:table-cell" />
-                      <td className="px-3 py-2"><Badge tone="amber">{i.role}</Badge></td>
+                      <td className="px-3 py-2"><Badge tone="amber">{t.roles.labels[i.role] ?? i.role}</Badge></td>
                       <td className="px-3 py-2 text-right">
-                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => adminRevokeInvitation(tenantId, i.invitation_id))}>Revoke</Button>
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => run(() => adminRevokeInvitation(tenantId, i.invitation_id))}>{t.admin.revoke}</Button>
                       </td>
                     </tr>
                   ))}
