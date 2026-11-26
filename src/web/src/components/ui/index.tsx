@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icons } from "./icons";
+import { useI18n } from "@/lib/i18n/client";
 
 /** Shared building blocks, so every page looks and behaves the same. */
 
@@ -163,6 +164,7 @@ export function EmptyState({ icon, title, description, action }: { icon?: React.
 export function Modal({ open, onClose, title, description, children, footer, wide }: {
   open: boolean; onClose: () => void; title: string; description?: string; children: React.ReactNode; footer?: React.ReactNode; wide?: boolean;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -184,7 +186,7 @@ export function Modal({ open, onClose, title, description, children, footer, wid
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{title}</h2>
             {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
           </div>
-          <button onClick={onClose} className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800" aria-label="Close">
+          <button onClick={onClose} className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800" aria-label={t.common.close}>
             <Icons.X />
           </button>
         </div>
@@ -197,6 +199,7 @@ export function Modal({ open, onClose, title, description, children, footer, wid
 
 /** A value with a copy button: endpoints, commands, keys. */
 export function CopyField({ value, label, multiline }: { value: string; label?: string; multiline?: boolean }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -213,7 +216,7 @@ export function CopyField({ value, label, multiline }: { value: string; label?: 
       {label && <div className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{label}</div>}
       <div className="group relative">
         <pre className={cx("overflow-x-auto rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 pr-10 font-mono text-xs text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300", !multiline && "whitespace-pre")}>{value}</pre>
-        <button onClick={copy} title="Copy" className="absolute right-1.5 top-1.5 rounded-md p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+        <button onClick={copy} title={t.common.copy} aria-label={t.common.copy} className="absolute right-1.5 top-1.5 rounded-md p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
           {copied ? <Icons.Check className="h-3.5 w-3.5 text-emerald-500" /> : <Icons.Copy className="h-3.5 w-3.5" />}
         </button>
       </div>
@@ -232,20 +235,12 @@ export function Stat({ label, value, hint }: { label: string; value: React.React
 }
 
 export function ErrorBanner({ error, onClose }: { error: string | null; onClose?: () => void }) {
+  const { t } = useI18n();
   if (!error) return null;
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
       <span>{error}</span>
-      {onClose && <button onClick={onClose} className="shrink-0 opacity-70 hover:opacity-100"><Icons.X /></button>}
+      {onClose && <button onClick={onClose} aria-label={t.common.close} className="shrink-0 opacity-70 hover:opacity-100"><Icons.X /></button>}
     </div>
   );
-}
-
-export function ago(iso: string | null | undefined) {
-  if (!iso) return "—";
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return "just now";
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
 }

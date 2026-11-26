@@ -10,14 +10,17 @@ import { useAuth } from "@/components/platform/AuthProvider";
 import { Icons } from "@/components/ui/icons";
 import { cx } from "@/components/ui";
 import { useTheme, type ThemeChoice } from "./theme";
+import { LanguageSwitch } from "./LanguageSwitch";
+import { useI18n } from "@/lib/i18n/client";
+import type { Messages } from "@/lib/i18n/languages";
 
-type NavItem = { href: string; label: string; icon: (p: { className?: string }) => React.ReactNode; match?: string[] };
+type NavItem = { href: string; label: (t: Messages) => string; icon: (p: { className?: string }) => React.ReactNode; match?: string[] };
 
 /** The menu. A new staff page is added here (docs/extending.md). */
 const NAV: { section: string; items: NavItem[] }[] = [
   {
     section: "Testigo",
-    items: [{ href: "/casos", label: "Casos", icon: Icons.Shield }],
+    items: [{ href: "/casos", label: (t) => t.shell.navCases, icon: Icons.Shield }],
   },
 ];
 
@@ -37,6 +40,7 @@ function readCollapsed() {
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -62,8 +66,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <button
       onClick={toggleCollapsed}
       className="absolute -right-3 top-3 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 shadow-sm hover:text-zinc-700 lg:flex dark:border-zinc-700 dark:bg-zinc-900 dark:hover:text-zinc-200"
-      title={collapsed ? "Expandir el menú" : "Contraer el menú"}
-      aria-label={collapsed ? "Expandir el menú" : "Contraer el menú"}
+      title={collapsed ? t.shell.expandMenu : t.shell.collapseMenu}
+      aria-label={collapsed ? t.shell.expandMenu : t.shell.collapseMenu}
     >
       <Icons.ChevronRight className={cx("h-3.5 w-3.5 transition-transform", !collapsed && "rotate-180")} />
     </button>
@@ -76,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {!collapsed && (
           <div className="min-w-0">
             <div className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">{SITE_NAME}</div>
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">Prototipo · Fase 0</div>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500">{t.shell.phase}</div>
           </div>
         )}
         {collapseToggle}
@@ -94,7 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      title={collapsed ? item.label : undefined}
+                      title={collapsed ? item.label(t) : undefined}
                       className={cx(
                         "group flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors",
                         active
@@ -104,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       <item.icon className={cx("h-4 w-4 shrink-0", active ? "text-brand-500" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300")} />
-                      {!collapsed && item.label}
+                      {!collapsed && item.label(t)}
                     </Link>
                   </li>
                 );
@@ -130,13 +134,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div className="h-full">{sidebar}</div>
-          <button className="flex-1 bg-black/40" aria-label="Cerrar el menú" onClick={() => setMobileOpen(false)} />
+          <button className="flex-1 bg-black/40" aria-label={t.shell.closeMenu} onClick={() => setMobileOpen(false)} />
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex h-12 items-center gap-2 border-b border-zinc-200 px-3 lg:hidden print:hidden dark:border-zinc-800">
-          <button onClick={() => setMobileOpen(true)} className="relative rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900" aria-label="Abrir el menú">
+          <button onClick={() => setMobileOpen(true)} className="relative rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900" aria-label={t.shell.openMenu}>
             <Icons.Menu className="h-5 w-5" />
           </button>
           <Icons.Logo className="h-6 w-6" />
@@ -150,14 +154,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function ThemeSwitch() {
   const [theme, setTheme] = useTheme();
+  const { t } = useI18n();
   const options: [ThemeChoice, React.ReactNode, string][] = [
-    ["light", <Icons.Sun key="l" className="h-3.5 w-3.5" />, "Claro"],
-    ["dark", <Icons.Moon key="d" className="h-3.5 w-3.5" />, "Oscuro"],
-    ["system", <Icons.Monitor key="s" className="h-3.5 w-3.5" />, "Como el sistema"],
+    ["light", <Icons.Sun key="l" className="h-3.5 w-3.5" />, t.shell.themeLight],
+    ["dark", <Icons.Moon key="d" className="h-3.5 w-3.5" />, t.shell.themeDark],
+    ["system", <Icons.Monitor key="s" className="h-3.5 w-3.5" />, t.shell.themeSystem],
   ];
   return (
     <div className="flex items-center justify-between rounded-md px-2 py-1">
-      <span className="text-xs text-zinc-500">Tema</span>
+      <span className="text-xs text-zinc-500">{t.shell.theme}</span>
       <div className="flex rounded-md bg-zinc-200/60 p-0.5 dark:bg-zinc-900">
         {options.map(([value, icon, label]) => (
           <button
@@ -185,6 +190,7 @@ function ThemeSwitch() {
  */
 function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void }) {
   const { me } = useAuth();
+  const { t } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -203,7 +209,7 @@ function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
 
   const orgs = me.organizations ?? [];
   const current = orgs.find((o) => o.tenant_id === me.tenant_id);
-  const name = me.user?.email || "Usuario local";
+  const name = me.user?.email || t.shell.localUser;
   const initials = name.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("") || "A";
 
   async function switchTo(tenantId: string) {
@@ -239,7 +245,8 @@ function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        title={collapsed ? "Cuenta, ajustes y tema" : undefined}
+        title={collapsed ? t.shell.accountMenu : undefined}
+        aria-label={collapsed ? t.shell.accountMenu : undefined}
         className={cx("flex w-full items-center gap-2.5 rounded-lg p-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-900", collapsed && "justify-center",
           inMenu && "bg-white ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800")}
       >
@@ -248,8 +255,8 @@ function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
         </span>
         {!collapsed && (
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-xs font-medium text-zinc-800 dark:text-zinc-200">{current?.name ?? "Organización"}</span>
-            <span className="block truncate text-[11px] text-zinc-500">{name} · {me.role}</span>
+            <span className="block truncate text-xs font-medium text-zinc-800 dark:text-zinc-200">{current?.name ?? t.shell.organizationFallback}</span>
+            <span className="block truncate text-[11px] text-zinc-500">{name}{me.role ? ` · ${t.roles.labels[me.role]}` : ""}</span>
           </span>
         )}
         {!collapsed && <Icons.ChevronDown className="h-3.5 w-3.5 text-zinc-400" />}
@@ -259,7 +266,7 @@ function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
         <div className="absolute bottom-full left-0 z-50 mb-1 w-60 rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
           {orgs.length > 1 && (
             <>
-              <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Organizaciones</div>
+              <div className="px-2 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{t.shell.organizations}</div>
               {orgs.map((o) => (
                 <button key={o.tenant_id} disabled={busy || o.tenant_id === me.tenant_id} onClick={() => switchTo(o.tenant_id)}
                   className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100 disabled:cursor-default dark:hover:bg-zinc-800">
@@ -271,17 +278,18 @@ function AccountCard({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             </>
           )}
           <Link href="/settings" onClick={go} className={itemClass(at("/settings"))}>
-            <Icons.Settings className="h-3.5 w-3.5 text-zinc-400" /> Ajustes
+            <Icons.Settings className="h-3.5 w-3.5 text-zinc-400" /> {t.shell.settings}
           </Link>
           {me.user?.platform_admin && me.server.auth_mode === "accounts" && (
             <Link href="/admin" onClick={go} className={itemClass(at("/admin"))}>
-              <Icons.Shield className="h-3.5 w-3.5 text-zinc-400" /> Administración
+              <Icons.Shield className="h-3.5 w-3.5 text-zinc-400" /> {t.shell.admin}
             </Link>
           )}
           <ThemeSwitch />
+          <LanguageSwitch />
           {me.via === "session" && (
             <button onClick={logout} disabled={busy} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-rose-600 hover:bg-zinc-100 dark:text-rose-400 dark:hover:bg-zinc-800">
-              <Icons.LogOut className="h-3.5 w-3.5" /> Cerrar sesión
+              <Icons.LogOut className="h-3.5 w-3.5" /> {t.shell.signOut}
             </button>
           )}
         </div>

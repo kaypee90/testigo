@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { UNAUTHORIZED_EVENT, getMe } from "@/lib/api";
 import type { Me } from "@/lib/platformTypes";
 import { isPublicPath } from "@/lib/publicPaths";
+import { useI18n } from "@/lib/i18n/client";
 
 interface AuthState {
   me: Me | null;
@@ -19,8 +20,10 @@ export function useAuth() {
 
 /** Loads who's signed in and keeps everything but the landing and sign-in pages behind it. */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const [me, setMe] = useState<Me | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Whether the last attempt to load the session failed; worded at render time.
+  const [error, setError] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isPublic = isPublicPath(pathname);
@@ -29,10 +32,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const next = await getMe();
       setMe(next);
-      setError(null);
+      setError(false);
       return next;
     } catch {
-      setError("We can't connect right now. Please try again in a moment.");
+      setError(true);
       return null;
     }
   }, []);
@@ -40,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     getMe()
-      .then((next) => { if (!cancelled) { setMe(next); setError(null); } })
-      .catch(() => { if (!cancelled) setError("No pudimos conectar. Intenta de nuevo en un momento."); });
+      .then((next) => { if (!cancelled) { setMe(next); setError(false); } })
+      .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -63,8 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (error && !me) {
     return (
       <div className="m-auto max-w-sm p-8 text-center">
-        <div className="text-sm font-medium text-rose-600 dark:text-rose-400">{error}</div>
-        <p className="mt-1 text-xs text-zinc-500">Si el problema continúa, recarga la página o vuelve en unos minutos.</p>
+        <div className="text-sm font-medium text-rose-600 dark:text-rose-400">{t.errors.cantConnect}</div>
+        <p className="mt-1 text-xs text-zinc-500">{t.errors.cantConnectHelp}</p>
       </div>
     );
   }
@@ -72,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (!isPublic && (me === null || mustSignIn)) {
     return (
       <div className="m-auto flex items-center gap-2 p-8 text-sm text-zinc-500">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-500" /> Cargando…
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-500" /> {t.common.loading}
       </div>
     );
   }

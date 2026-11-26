@@ -7,6 +7,7 @@ import { CaseDetail } from "@/components/casos/CaseDetail";
 import { AccessNotice } from "@/components/casos/AccessNotice";
 import { errorText, testigoMe, type TestigoMe } from "@/lib/testigo";
 import { ErrorBanner } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/client";
 
 /**
  * Testigo cases (FR-CASE-1, FR-CASE-2): /casos is the queue, /casos?id=<case id> one case.
@@ -23,16 +24,17 @@ export default function CasosPage() {
 
 function CasosFromUrl() {
   const params = useSearchParams();
+  const { t } = useI18n();
   const id = params.get("id");
   const [me, setMe] = useState<TestigoMe | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
-    testigoMe().then(setMe).catch((e) => setError(errorText(e)));
+    testigoMe().then(setMe).catch(setError);
   }, []);
 
-  if (error) return <div className="p-6"><ErrorBanner error={error} /></div>;
-  if (!me) return <div className="p-6 text-sm text-zinc-500">Cargando…</div>;
+  if (error) return <div className="p-6"><ErrorBanner error={errorText(error, t)} /></div>;
+  if (!me) return <div className="p-6 text-sm text-zinc-500">{t.common.loading}</div>;
   if (!me.allowed) return <AccessNotice problem={me.problem} />;
   return id ? <CaseDetail key={id} caseId={id} me={me} /> : <CaseQueue />;
 }

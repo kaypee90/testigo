@@ -49,7 +49,9 @@ docker compose up --build
 - Formulario público de reporte: http://localhost:3102 (en inglés: http://localhost:3102/en)
 - Panel del equipo: http://localhost:3101 (usuario `admin`, contraseña `admin`, solo en la demo).
   Los casos están en **Casos**. Por defecto los casos exigen verificación en dos pasos: actívala en
-  Ajustes → Cuenta, o levanta la demo con `TESTIGO_REQUIRE_2FA=false` solo en tu máquina.
+  Ajustes → Cuenta, o levanta la demo con `TESTIGO_REQUIRE_2FA=false` solo en tu máquina. El panel
+  está en español y en inglés: cambia el idioma en el menú de la cuenta (abajo a la izquierda) o en
+  la página de inicio de sesión.
 - API: http://localhost:5180
 
 La demo trae 14 reportes ficticios ya analizados. El modelo por defecto es `Mock`: determinista,
@@ -131,8 +133,9 @@ docker compose up --build
 
 - Public report form: http://localhost:3102 (Spanish; English at http://localhost:3102/en, a draft
   awaiting human review)
-- Staff dashboard: http://localhost:3101 (`admin` / `admin`, demo only). Cases are under
-  **Casos**. Case data needs two-factor sign-in by default: turn it on under Ajustes → Cuenta,
+- Staff dashboard: http://localhost:3101 (`admin` / `admin`, demo only). It opens in Spanish;
+  switch to English from the account menu (bottom left) or on the sign-in page. Cases are under
+  **Cases**. Case data needs two-factor sign-in by default: turn it on under Settings → Account,
   or start the demo with `TESTIGO_REQUIRE_2FA=false` on your own machine only.
 - API: http://localhost:5180
 

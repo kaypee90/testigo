@@ -16,7 +16,8 @@ import {
   revokeInvitation,
   setMemberRole,
 } from "@/lib/api";
-import { ROLES, ROLE_HELP, ROLE_LABELS, atLeast } from "@/lib/platformTypes";
+import { ROLES, atLeast } from "@/lib/platformTypes";
+import { useI18n } from "@/lib/i18n/client";
 import type { Invitation, Member, Organization, Role } from "@/lib/platformTypes";
 import { PageHeader } from "@/components/ui";
 import { useAuth } from "@/components/platform/AuthProvider";
@@ -40,6 +41,7 @@ function Section({ title, children, right }: { title: string; children: React.Re
 }
 
 function CopyOnce({ label, value }: { label: string; value: string }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   return (
     <div className="space-y-1 rounded border border-amber-300 bg-amber-50 p-2 text-xs dark:border-amber-800 dark:bg-amber-950/40">
@@ -47,7 +49,7 @@ function CopyOnce({ label, value }: { label: string; value: string }) {
       <div className="flex gap-2">
         <code className="min-w-0 flex-1 truncate rounded bg-white px-1.5 py-1 dark:bg-zinc-900">{value}</code>
         <button type="button" className={subtle} onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true))}>
-          {copied ? "copiado" : "copiar"}
+          {copied ? t.common.copiedLower : t.common.copyLower}
         </button>
       </div>
     </div>
@@ -56,6 +58,7 @@ function CopyOnce({ label, value }: { label: string; value: string }) {
 
 function OrganizationTab({ role }: { role: Role }) {
   const { me, refresh } = useAuth();
+  const { t, date } = useI18n();
   const [org, setOrg] = useState<Organization | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -103,40 +106,40 @@ function OrganizationTab({ role }: { role: Role }) {
   return (
     <div className="space-y-4">
       {error && <div className="text-sm text-rose-600">{error}</div>}
-      <Section title="Organización">
+      <Section title={t.settings.organization}>
         <div className="flex gap-2">
-          <input value={name} aria-label="Nombre de la organización" onChange={(e) => setName(e.target.value)} disabled={!isAdmin} className={`${field} flex-1`} />
+          <input value={name} aria-label={t.settings.organizationName} onChange={(e) => setName(e.target.value)} disabled={!isAdmin} className={`${field} flex-1`} />
           {isAdmin && (
             <button className={button} disabled={!name.trim() || name === org?.name}
               onClick={() => act(async () => { await renameOrganization(name); await refresh(); })}>
-              Cambiar nombre
+              {t.settings.rename}
             </button>
           )}
         </div>
-        <div className="text-xs text-zinc-500">Id <code>{org?.tenant_id}</code> · tu rol: {ROLE_LABELS[role]}</div>
+        <div className="text-xs text-zinc-500">Id <code>{org?.tenant_id}</code> · {t.settings.yourRole(t.roles.labels[role])}</div>
       </Section>
 
-      <Section title={`Integrantes (${members.length})`}>
+      <Section title={t.settings.members(members.length)}>
         <ul className="divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
           {members.map((m) => {
             const self = m.user_id === me?.user?.user_id;
             return (
               <li key={m.user_id} className="flex items-center justify-between gap-2 py-2">
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{m.name} {self && <span className="text-xs text-zinc-500">(tú)</span>}</div>
+                  <div className="truncate font-medium">{m.name} {self && <span className="text-xs text-zinc-500">{t.settings.you}</span>}</div>
                   <div className="truncate text-xs text-zinc-500">{m.email}</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {isAdmin && !self ? (
-                    <select value={m.role} aria-label={`Rol de ${m.name}`} className={field} onChange={(e) => act(() => setMemberRole(m.user_id, e.target.value as Role))}>
-                      {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                    <select value={m.role} aria-label={t.settings.roleOf(m.name)} className={field} onChange={(e) => act(() => setMemberRole(m.user_id, e.target.value as Role))}>
+                      {ROLES.map((r) => <option key={r} value={r}>{t.roles.labels[r]}</option>)}
                     </select>
                   ) : (
-                    <span className="text-xs">{ROLE_LABELS[m.role]}</span>
+                    <span className="text-xs">{t.roles.labels[m.role]}</span>
                   )}
                   {(isAdmin || self) && (
                     <button className={subtle} onClick={() => {
-                      if (confirm(self ? "¿Salir de esta organización?" : `¿Retirar a ${m.email}?`)) {
+                      if (confirm(self ? t.settings.confirmLeave : t.settings.confirmRemove(m.email))) {
                         void act(async () => {
                           await removeMember(m.user_id);
                           // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a full reload drops everything loaded for the organization just left
@@ -144,7 +147,7 @@ function OrganizationTab({ role }: { role: Role }) {
                         });
                       }
                     }}>
-                      {self ? "Salir" : "Retirar"}
+                      {self ? t.settings.leave : t.settings.remove}
                     </button>
                   )}
                 </div>
@@ -155,22 +158,22 @@ function OrganizationTab({ role }: { role: Role }) {
       </Section>
 
       {isAdmin && (
-        <Section title="Invitar a alguien">
+        <Section title={t.settings.invite}>
           <form onSubmit={invite} className="flex flex-wrap gap-2">
-            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} type="email" required placeholder="persona@ejemplo.invalid" aria-label="Correo de la persona invitada" className={`${field} min-w-0 flex-1`} />
-            <select value={inviteRole} aria-label="Rol de la invitación" onChange={(e) => setInviteRole(e.target.value as Role)} className={field}>
-              {ROLES.filter((r) => atLeast(role, r)).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} type="email" required placeholder={t.settings.inviteEmailPlaceholder} aria-label={t.settings.inviteEmail} className={`${field} min-w-0 flex-1`} />
+            <select value={inviteRole} aria-label={t.settings.inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} className={field}>
+              {ROLES.filter((r) => atLeast(role, r)).map((r) => <option key={r} value={r}>{t.roles.labels[r]}</option>)}
             </select>
-            <button type="submit" className={button}>Crear invitación</button>
+            <button type="submit" className={button}>{t.settings.createInvite}</button>
           </form>
-          <p className="text-xs text-zinc-500">{ROLE_LABELS[inviteRole]}: {ROLE_HELP[inviteRole]}.</p>
-          {link && <CopyOnce label="Envía este enlace (se muestra una sola vez y solo funciona con el correo de la persona invitada):" value={link} />}
+          <p className="text-xs text-zinc-500">{t.roles.labels[inviteRole]}: {t.roles.help[inviteRole]}.</p>
+          {link && <CopyOnce label={t.settings.inviteLink} value={link} />}
           {invitations.filter((i) => !i.accepted_at && !i.revoked_at).length > 0 && (
             <ul className="space-y-1 text-xs">
               {invitations.filter((i) => !i.accepted_at && !i.revoked_at).map((i) => (
                 <li key={i.invitation_id} className="flex items-center justify-between">
-                  <span>{i.email} · {ROLE_LABELS[i.role]} · vence {new Date(i.expires_at).toLocaleDateString("es-CL")}</span>
-                  <button className={subtle} onClick={() => act(() => revokeInvitation(i.invitation_id))}>Revocar</button>
+                  <span>{i.email} · {t.roles.labels[i.role]} · {t.settings.expires(date(i.expires_at))}</span>
+                  <button className={subtle} onClick={() => act(() => revokeInvitation(i.invitation_id))}>{t.settings.revoke}</button>
                 </li>
               ))}
             </ul>
@@ -183,19 +186,20 @@ function OrganizationTab({ role }: { role: Role }) {
 
 function AccountTab() {
   const { me } = useAuth();
+  const { t } = useI18n();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   if (me?.via !== "session") {
-    return <div className="text-sm text-zinc-500">Las cuentas están desactivadas en este servidor.</div>;
+    return <div className="text-sm text-zinc-500">{t.settings.accountsOff}</div>;
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
       await changePassword(current, next);
-      setMessage("Contraseña cambiada. Se cerraron las sesiones de los demás navegadores.");
+      setMessage(t.settings.passwordChanged);
       setCurrent("");
       setNext("");
     } catch (err) {
@@ -205,11 +209,11 @@ function AccountTab() {
 
   return (
     <div className="space-y-4">
-    <Section title={`Cuenta: ${me.user?.email ?? ""}`}>
+    <Section title={t.settings.account(me.user?.email ?? "")}>
       <form onSubmit={submit} className="flex max-w-sm flex-col gap-2">
-        <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="Contraseña actual" aria-label="Contraseña actual" autoComplete="current-password" className={field} />
-        <input type="password" value={next} onChange={(e) => setNext(e.target.value)} placeholder="Nueva contraseña (10 o más caracteres)" aria-label="Nueva contraseña" autoComplete="new-password" className={field} />
-        <button type="submit" className={button} disabled={!current || !next}>Cambiar contraseña</button>
+        <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder={t.settings.currentPassword} aria-label={t.settings.currentPassword} autoComplete="current-password" className={field} />
+        <input type="password" value={next} onChange={(e) => setNext(e.target.value)} placeholder={t.settings.newPasswordPlaceholder} aria-label={t.settings.newPassword} autoComplete="new-password" className={field} />
+        <button type="submit" className={button} disabled={!current || !next}>{t.settings.changePassword}</button>
         {message && <div className="text-xs">{message}</div>}
       </form>
     </Section>
@@ -225,6 +229,7 @@ export default function SettingsPage() {
 
 function Settings() {
   const { me } = useAuth();
+  const { t } = useI18n();
   // ?tab=account picks the tab; useSearchParams stays current on in-app navigation.
   const params = useSearchParams();
   const urlTab = (params.get("tab") as Tab | null) ?? "organization";
@@ -237,13 +242,13 @@ function Settings() {
   const role = (me?.role ?? "Viewer") as Role;
 
   const tabs: [Tab, string, boolean][] = [
-    ["organization", "Organización", true],
-    ["account", "Cuenta", true],
+    ["organization", t.settings.tabOrganization, true],
+    ["account", t.settings.tabAccount, true],
   ];
 
   return (
     <div className="flex flex-col">
-      <PageHeader title="Ajustes" description="Tu organización, sus integrantes y tu cuenta." />
+      <PageHeader title={t.settings.title} description={t.settings.description} />
       <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 px-6 py-6">
         <aside className="w-40 shrink-0 space-y-1 text-sm">
           {tabs.filter(([, , visible]) => visible).map(([t, label]) => (

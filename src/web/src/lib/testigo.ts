@@ -1,4 +1,5 @@
 import { ApiError, apiFetch } from "./api";
+import type { Messages } from "./i18n/languages";
 
 /**
  * The Testigo case API (src/AgentRuntime.Api/Controllers/TestigoCasesController.cs): the queue,
@@ -9,36 +10,7 @@ import { ApiError, apiFetch } from "./api";
 export type CaseStatus =
   | "received" | "in_triage" | "needs_info" | "verified" | "referred" | "in_litigation" | "closed_no_action" | "withdrawn";
 
-export const STATUS_LABELS: Record<string, string> = {
-  received: "Recibido",
-  in_triage: "En análisis",
-  needs_info: "Falta información",
-  verified: "Verificado",
-  referred: "Derivado",
-  in_litigation: "En litigio",
-  closed_no_action: "Cerrado sin acción",
-  withdrawn: "Retirado",
-};
-
-export const ANALYSIS_LABELS: Record<string, string> = {
-  pending: "Análisis pendiente",
-  running: "Analizando",
-  complete: "Análisis listo",
-  incomplete: "Análisis incompleto",
-};
-
-export const LINK_LABELS: Record<string, string> = {
-  duplicate: "Posible duplicado",
-  same_actor: "Mismo actor",
-  same_technology: "Misma tecnología",
-  related: "Relacionado",
-};
-
-/** The kinds of personal data replaced in the analysis copy (src/Testigo/Redaction/Redactor.cs). */
-export const REDACTION_LABELS: Record<string, string> = {
-  PERSON: "nombres", RUT: "RUT", ID: "números de identificación", EMAIL: "correos", PHONE: "teléfonos",
-  URL: "enlaces", HANDLE: "nombres de usuario", ADDRESS: "direcciones", LOCATION: "ubicaciones",
-};
+// Status, analysis, link and redaction labels are in lib/i18n (status, analysis, links, redaction).
 
 export interface TestigoMe {
   allowed: boolean;
@@ -173,8 +145,8 @@ export const revealContact = (caseId: string, reason: string) =>
 export const caseAccessLog = (caseId: string) => apiFetch<{ items: AccessEntry[] }>(`/api/testigo/cases/${caseId}/access`);
 export const listStaff = () => apiFetch<{ items: StaffMember[] }>("/api/testigo/staff");
 
-/** The API's own Spanish message from an error ("{ error: … }"), or a generic one. */
-export function errorText(e: unknown): string {
+/** The API's own message from an error ("{ error: … }"), or a generic one in the dashboard's language. */
+export function errorText(e: unknown, t: Messages): string {
   if (e instanceof ApiError) {
     const json = e.message.indexOf("{");
     if (json >= 0) {
@@ -183,12 +155,8 @@ export function errorText(e: unknown): string {
         if (body.error) return body.error;
       } catch { /* not JSON */ }
     }
-    if (e.status === 404) return "No existe ese caso en esta organización.";
-    if (e.status === 401) return "La sesión terminó. Vuelve a iniciar sesión.";
+    if (e.status === 404) return t.errors.caseNotFound;
+    if (e.status === 401) return t.errors.sessionEnded;
   }
-  return "No se pudo completar la acción. Intenta de nuevo.";
+  return t.errors.generic;
 }
-
-/** A date in Chilean Spanish, with the time. */
-export const fecha = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" }) : "—";

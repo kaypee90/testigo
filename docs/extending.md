@@ -41,6 +41,7 @@ which version produced what.
 | Immediate-danger rules (FR-ANA-6) | `src/Testigo/Data/danger-rules-v1.json` | `Testigo:Data:DangerRules` |
 | Emergency and support contacts (FR-ADM-6) | `src/Testigo/Data/support-contacts-v1.json` | `Testigo:Data:SupportContacts` |
 | Reporter texts (FR-INT-8) | `src/Testigo.Reporter/Texts/es.json`, `en.json` | embedded; `Reporter:Languages` picks which are offered |
+| Staff dashboard texts | `src/web/src/lib/i18n/es.ts`, `en.ts` | built in; each person picks a language in the dashboard |
 
 With Docker Compose, mount your file into the `api` container and set the matching environment
 variable, for example `Testigo__Data__Taxonomy=/config/taxonomy-v2.json`.
@@ -110,6 +111,26 @@ To add Portuguese (or another language):
 The report records the language it was sent in (through its notice version), so staff can tell
 which text a reporter agreed to. Tests check that every texts file has exactly the keys of
 `es.json` (`ReporterAppTests`) and that each form translation is complete (`FormValidationTests`).
+
+### A new language for the staff dashboard
+
+The dashboard's texts are in `src/web/src/lib/i18n`: `es.ts` is the source, and every other
+language is an object of the same shape (`Messages`). Each person picks a language in the account
+menu or on the sign-in page; the choice is kept in a first-party cookie (`testigo_lang`, the code
+only), so pages render in it from the server. The Spanish §12 banner is always shown, with the
+translation of `banner` below it.
+
+To add Portuguese:
+
+1. Copy `en.ts` to `pt.ts`, type it as `Messages`, and translate every text, including
+   `language.name` and `language.locale` (for dates, for example `pt-BR`).
+2. Add `pt` to `LANGUAGES` in `languages.ts`. The switch lists it automatically.
+3. Run `npm test` in `src/web`: it checks that every language has exactly the Spanish keys, no
+   empty texts and a working locale. `npx tsc --noEmit` catches the same gaps while you type.
+
+What comes from the server keeps the server's language: taxonomy labels, form questions, report
+text, history reasons, audit summaries and API error messages. Translating those is the reporter
+side's work above (taxonomy and form labels) or the API's.
 
 ## Things that are code
 

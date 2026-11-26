@@ -10,6 +10,7 @@ import {
   startTwoFactorSetup,
   type TwoFactorStatus,
 } from "@/lib/api";
+import { useI18n } from "@/lib/i18n/client";
 
 const field = "rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm shadow-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-zinc-800 dark:bg-zinc-950";
 const button = "rounded-lg bg-brand-500 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-brand-600 disabled:opacity-50";
@@ -28,6 +29,7 @@ type Step =
  * code, then shows recovery codes once.
  */
 export function TwoFactorSettings() {
+  const { t, date } = useI18n();
   const [status, setStatus] = useState<TwoFactorStatus | null>(null);
   const [step, setStep] = useState<Step>({ kind: "idle" });
   const [password, setPassword] = useState("");
@@ -61,31 +63,28 @@ export function TwoFactorSettings() {
   const refresh = async () => setStatus(await getTwoFactor());
 
   if (!status) {
-    return <Box>{error ? <p className="text-xs text-rose-600">{error}</p> : <p className="text-xs text-zinc-500">Cargando…</p>}</Box>;
+    return <Box>{error ? <p className="text-xs text-rose-600">{error}</p> : <p className="text-xs text-zinc-500">{t.common.loading}</p>}</Box>;
   }
 
   return (
     <Box badge={status.enabled ? "On" : "Off"}>
-      <p className="text-xs text-zinc-500">
-        Además de tu contraseña, se pide un código de 6 dígitos de una aplicación de autenticación.
-        Esta segunda comprobación reduce el riesgo si alguien obtiene tu contraseña.
-      </p>
+      <p className="text-xs text-zinc-500">{t.twoFactor.intro}</p>
 
       {step.kind === "idle" && !status.enabled && (
-        <button className={button} onClick={() => go({ kind: "password" })}>Activar verificación en dos pasos</button>
+        <button className={button} onClick={() => go({ kind: "password" })}>{t.twoFactor.enable}</button>
       )}
 
       {step.kind === "idle" && status.enabled && (
         <div className="space-y-2">
           <p className="text-xs text-zinc-600 dark:text-zinc-300">
-            Activa desde {status.enabled_at ? new Date(status.enabled_at).toLocaleDateString("es-CL") : "—"}.{" "}
+            {t.twoFactor.activeSince(date(status.enabled_at))}{" "}
             <span className={status.recovery_codes_left <= 2 ? "font-medium text-amber-700 dark:text-amber-400" : ""}>
-              Códigos de recuperación restantes: {status.recovery_codes_left}.
+              {t.twoFactor.codesLeft(status.recovery_codes_left)}
             </span>
           </p>
           <div className="flex flex-wrap gap-2">
-            <button className={subtle} onClick={() => go({ kind: "confirm", action: "regenerate" })}>Nuevos códigos de recuperación</button>
-            <button className={subtle} onClick={() => go({ kind: "confirm", action: "disable" })}>Desactivar</button>
+            <button className={subtle} onClick={() => go({ kind: "confirm", action: "regenerate" })}>{t.twoFactor.newCodes}</button>
+            <button className={subtle} onClick={() => go({ kind: "confirm", action: "disable" })}>{t.twoFactor.disable}</button>
           </div>
         </div>
       )}
@@ -98,12 +97,12 @@ export function TwoFactorSettings() {
             go({ kind: "scan", secret: setup.secret, qrSvg: setup.qr_svg });
           });
         }}>
-          <label htmlFor="two-factor-setup-password" className="text-xs text-zinc-500">Ingresa tu contraseña para empezar.</label>
-          <input id="two-factor-setup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña"
+          <label htmlFor="two-factor-setup-password" className="text-xs text-zinc-500">{t.twoFactor.enterPassword}</label>
+          <input id="two-factor-setup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.twoFactor.password}
             autoComplete="current-password" className={field} autoFocus />
           <div className="flex gap-2">
-            <button type="submit" className={button} disabled={busy || !password}>{busy ? "…" : "Continuar"}</button>
-            <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>Cancelar</button>
+            <button type="submit" className={button} disabled={busy || !password}>{busy ? t.common.busy : t.twoFactor.continue}</button>
+            <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>{t.common.cancel}</button>
           </div>
         </form>
       )}
@@ -119,23 +118,23 @@ export function TwoFactorSettings() {
           });
         }}>
           <ol className="list-decimal space-y-1 pl-5 text-xs text-zinc-600 dark:text-zinc-300">
-            <li>Agrega una cuenta en tu aplicación de autenticación y escanea este código QR.</li>
-            <li>Después ingresa el código de 6 dígitos que muestra la aplicación.</li>
+            <li>{t.twoFactor.scanStep}</li>
+            <li>{t.twoFactor.codeStep}</li>
           </ol>
           {/* The QR code is drawn by the server as an SVG; shown as an image so none of it runs as markup. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`data:image/svg+xml;utf8,${encodeURIComponent(step.qrSvg)}`} alt="Código QR para tu aplicación de autenticación"
+          <img src={`data:image/svg+xml;utf8,${encodeURIComponent(step.qrSvg)}`} alt={t.twoFactor.qrAlt}
             className="h-44 w-44 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700" />
           <p className="text-xs text-zinc-500">
-            ¿No puedes escanearlo? Ingresa esta clave en la aplicación:{" "}
+            {t.twoFactor.cantScan}{" "}
             <code className="select-all break-all font-mono text-zinc-800 dark:text-zinc-200">{step.secret.match(/.{1,4}/g)?.join(" ")}</code>
           </p>
           <div className="flex max-w-sm flex-col gap-2">
-            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Código de 6 dígitos" aria-label="Código de 6 dígitos" inputMode="numeric"
+            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t.twoFactor.sixDigits} aria-label={t.twoFactor.sixDigits} inputMode="numeric"
               autoComplete="one-time-code" maxLength={7} className={field} autoFocus />
             <div className="flex gap-2">
-              <button type="submit" className={button} disabled={busy || code.replace(/\s/g, "").length !== 6}>{busy ? "…" : "Activar"}</button>
-              <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>Cancelar</button>
+              <button type="submit" className={button} disabled={busy || code.replace(/\s/g, "").length !== 6}>{busy ? t.common.busy : t.twoFactor.activate}</button>
+              <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>{t.common.cancel}</button>
             </div>
           </div>
         </form>
@@ -160,17 +159,17 @@ export function TwoFactorSettings() {
         }}>
           <label className="text-xs text-zinc-500">
             {step.action === "disable"
-              ? "Para desactivar la verificación en dos pasos, ingresa tu contraseña y un código de la aplicación o de recuperación."
-              : "Los códigos nuevos reemplazan los anteriores. Ingresa tu contraseña y un código de la aplicación."}
+              ? t.twoFactor.disableHelp
+              : t.twoFactor.regenerateHelp}
           </label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" aria-label="Contraseña"
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.twoFactor.password} aria-label={t.twoFactor.password}
             autoComplete="current-password" className={field} autoFocus />
-          <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Código de la aplicación" aria-label="Código de la aplicación o de recuperación" autoComplete="one-time-code" className={field} />
+          <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t.twoFactor.appCode} aria-label={t.twoFactor.appOrRecoveryCode} autoComplete="one-time-code" className={field} />
           <div className="flex gap-2">
             <button type="submit" className={button} disabled={busy || !password || !code}>
-              {busy ? "…" : step.action === "disable" ? "Desactivar" : "Generar códigos nuevos"}
+              {busy ? t.common.busy : step.action === "disable" ? t.twoFactor.disable : t.twoFactor.generate}
             </button>
-            <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>Cancelar</button>
+            <button type="button" className={subtle} onClick={() => go({ kind: "idle" })}>{t.common.cancel}</button>
           </div>
         </form>
       )}
@@ -181,14 +180,15 @@ export function TwoFactorSettings() {
 }
 
 function Box({ children, badge }: { children: React.ReactNode; badge?: "On" | "Off" }) {
+  const { t } = useI18n();
   return (
     <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold">Verificación en dos pasos</h2>
+        <h2 className="text-sm font-semibold">{t.twoFactor.title}</h2>
         {badge && (
           <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${badge === "On"
             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-            : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"}`}>{badge === "On" ? "Activada" : "Desactivada"}</span>
+            : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"}`}>{badge === "On" ? t.twoFactor.on : t.twoFactor.off}</span>
         )}
       </div>
       {children}
@@ -198,11 +198,12 @@ function Box({ children, badge }: { children: React.ReactNode; badge?: "On" | "O
 
 /** Shown once: each code signs in once when the phone isn't at hand. */
 function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState<"yes" | "failed" | null>(null);
   const text = codes.join("\n");
 
   function download() {
-    const url = URL.createObjectURL(new Blob([`Testigo: códigos de recuperación\nCada código funciona una sola vez.\n\n${text}\n`], { type: "text/plain" }));
+    const url = URL.createObjectURL(new Blob([`${t.twoFactor.fileHeader}\n\n${text}\n`], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = "testigo-recovery-codes.txt";
@@ -214,18 +215,17 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
   return (
     <div className="space-y-3">
       <div className="rounded border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-        Guarda estos códigos en un lugar seguro, como tu gestor de contraseñas. Si pierdes el teléfono,
-        cada código permite iniciar sesión una vez. No se volverán a mostrar.
+        {t.twoFactor.saveCodes}
       </div>
       <ul className="grid max-w-sm grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-3 font-mono text-sm dark:bg-zinc-900">
         {codes.map((c) => <li key={c} className="select-all">{c}</li>)}
       </ul>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={subtle} onClick={() => navigator.clipboard.writeText(text).then(() => setCopied("yes"), () => setCopied("failed"))}>
-          {copied === "yes" ? "Copiados" : copied === "failed" ? "No se pudo copiar: usa Descargar" : "Copiar"}
+          {copied === "yes" ? t.twoFactor.copied : copied === "failed" ? t.twoFactor.copyFailed : t.common.copy}
         </button>
-        <button type="button" className={subtle} onClick={download}>Descargar</button>
-        <button type="button" className={button} onClick={onDone}>Ya los guardé</button>
+        <button type="button" className={subtle} onClick={download}>{t.twoFactor.download}</button>
+        <button type="button" className={button} onClick={onDone}>{t.twoFactor.saved}</button>
       </div>
     </div>
   );
