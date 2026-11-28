@@ -6,6 +6,10 @@
 >
 > *Prototype with synthetic data. Not an official reporting channel. Do not submit real information.*
 
+
+<img width="800" height="450" alt="testigo-demo" src="https://github.com/user-attachments/assets/887de5c6-ce01-4e6c-8dd7-cb2da6d17663" />
+
+
 [Español](#español) · [English](#english)
 
 ---
